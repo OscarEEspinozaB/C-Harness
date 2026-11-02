@@ -12,7 +12,7 @@ Estas [premisas](docs/premisas_c-harness.md) guían el proyecto:
 - **C-Harness pasa por C-Harness.** El verificador está escrito en C y debe superar sus propias reglas.
 - **Las reglas contienen lo que hoy contienen la experiencia y el tiempo.** Que un programa haya sobrevivido no convierte sus prácticas en buenas.
 
-Última medición (2 de noviembre de 2026, GCC 14.2): de 58 programas incorrectos, el arnés detuvo 54 y los otros 4 son límites declarados, y aceptó los 17 programas válidos de control. Son pruebas de regresión, no una tasa de detección. Las auditorías, todavía incompletas, de [cJSON](docs/AUDITORIA-CJSON.md) y [lz4](docs/AUDITORIA-LZ4.md) no confirmaron errores de memoria y encontraron cuatro defectos en el propio arnés. Esos programas son evidencia, no modelos: lo observado se recoge en [prácticas observadas](docs/PRACTICAS-OBSERVADAS.md).
+Última medición (2 de noviembre de 2026, GCC 14.2): de 59 programas incorrectos, el arnés detuvo 55 y los otros 4 son límites declarados, y aceptó los 20 programas válidos de control. Son pruebas de regresión, no una tasa de detección. Las auditorías, todavía incompletas, de [cJSON](docs/AUDITORIA-CJSON.md), [lz4](docs/AUDITORIA-LZ4.md) y [zlib](docs/AUDITORIA-ZLIB.md) no confirmaron errores de memoria y encontraron siete defectos en el propio arnés. Esos programas son evidencia, no modelos: lo observado se recoge en [prácticas observadas](docs/PRACTICAS-OBSERVADAS.md).
 
 El análisis completo está en [docs/VIABILIDAD.md](docs/VIABILIDAD.md).
 

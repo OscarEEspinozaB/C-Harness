@@ -1,5 +1,13 @@
-__stack_chk_fail
 _GLOBAL_OFFSET_TABLE_
+__ctype_b_loc
+__ctype_tolower_loc
+__ctype_toupper_loc
+__errno_location
+__isoc23_sscanf
+__isoc23_strtol
+__isoc23_strtoul
+__isoc99_sscanf
+__stack_chk_fail
 abort
 calloc
 exit
@@ -15,6 +23,7 @@ free
 fseek
 ftell
 fwrite
+localeconv
 malloc
 memcmp
 memcpy
@@ -26,6 +35,7 @@ putchar
 puts
 realloc
 snprintf
+sscanf
 stderr
 stdin
 stdout
@@ -35,7 +45,8 @@ strlen
 strncmp
 strrchr
 strstr
+strtod
 strtol
 strtoul
-__isoc23_strtol
-__isoc23_strtoul
+tolower
+toupper

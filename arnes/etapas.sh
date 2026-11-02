@@ -29,7 +29,22 @@ simbolos() {
   return 0
 }
 
-# Escribe la etapa que detuvo el archivo (C, V, S, E) o «-». Motivo en $tmp/m.
+# Búsqueda acotada con CBMC. Devuelve 1 solo si CBMC encuentra un fallo.
+# Si no concluye (tiempo, construcción no admitida), no decide y lo anota en $tmp/sin_concluir.
+acotada() {
+  local envoltorio="$tmp/acotada.c" r
+  printf '#include "ch_cabeceras.h"\n#include "%s"\n' "${CH_CBMC_ENTRADA:-$1}" > "$envoltorio"
+  # shellcheck disable=SC2086
+  timeout "${CH_CBMC_TIEMPO:-120}" cbmc -I"$CH_RAIZ/arnes" -I"$(dirname "$1")" ${CH_CBMC_INCLUSION:-} --bounds-check --pointer-check --div-by-zero-check \
+    --unwind "${CH_CBMC_VUELTAS:-5}" --no-unwinding-assertions "$envoltorio" >"$tmp/b.log" 2>&1
+  r=$?
+  [ $r -eq 0 ] && return 0
+  if [ $r -ne 10 ]; then echo "$(basename "$1"): salida $r" >> "$tmp/sin_concluir"; return 0; fi
+  grep ': FAILURE$' "$tmp/b.log" | sed -E 's/^\[[^]]*\] //; s/: FAILURE$//; s/\|/\\|/g' | paste -sd';' > "$tmp/m"
+  return 1
+}
+
+# Escribe la etapa que detuvo el archivo (C, V, S, B, E) o «-». Motivo en $tmp/m.
 # Opciones adicionales: CH_INCLUSION (compilación) y CH_ENLACE, CH_ARGS_EJECUCION.
 medir_arnes() {
   : > "$tmp/m"
@@ -49,6 +64,7 @@ medir_arnes() {
   gcc -std=c17 -O0 -I"$CH_RAIZ/arnes" -I"$(dirname "$1")" ${CH_INCLUSION:-} -include ch_veneno.h -c "$1" -o "$tmp/s.o" 2>/dev/null
   simbolos "$tmp/s.o" || { echo S; return; }
   nm "$tmp/s.o" | grep -q ' T main$' || { echo -; return; }
+  [ -n "${CH_SIN_CBMC:-}" ] || acotada "$1" || { echo B; return; }
   # shellcheck disable=SC2086
   if ! gcc $CH_DINAMICAS -I"$CH_RAIZ/arnes" -I"$(dirname "$1")" ${CH_INCLUSION:-} -include ch_veneno.h "$1" -o "$tmp/e" ${CH_ENLACE:-} 2>"$tmp/c.log"; then
     grep -m1 'error' "$tmp/c.log" | cut -c1-90 > "$tmp/m"; echo C; return

@@ -11,13 +11,19 @@ CH_INCLUSION="-isystem $CH_LLVM/include -include clang-c/Index.h"
 CH_ENLACE="-L$CH_LLVM/lib -lclang-19 -Wl,-rpath,$CH_LLVM/lib"
 CH_ARGS_EJECUCION="$fuente -I$CH_RAIZ/arnes -isystem $CH_LLVM/include -include ch_cabeceras.h"
 CH_SIMBOLOS_EXTRA='^clang_'
+CH_CBMC_INCLUSION="-I$CH_LLVM/include -I$CH_RAIZ/verificador"
+CH_CBMC_ENTRADA="$CH_RAIZ/verificador/entrada_cbmc.c"
 
-etapa=$(medir_arnes "$fuente")
+medir_arnes "$fuente" > "$tmp/etapa"; etapa=$(cat "$tmp/etapa")
+if [ -s "$tmp/sin_concluir" ]; then
+  echo "AUT-1 no se sostiene: CBMC no concluyó: $(cat "$tmp/sin_concluir")"
+  exit 1
+fi
 if [ "$etapa" != - ]; then
   echo "AUT-1 no se sostiene: etapa $etapa: $(cat "$tmp/m")"
   exit 1
 fi
-echo "El verificador pasa por compilación, verificador, símbolos y ejecución con sanitizadores."
+echo "El verificador pasa por compilación, verificador, símbolos, búsqueda acotada y ejecución con sanitizadores."
 
 mutado="$tmp/mutado.c"
 sed 's/static void informar(const char \*ruta, const struct candidato \*c)/static void informar(const char *ruta, struct candidato *c)/' "$fuente" > "$mutado"

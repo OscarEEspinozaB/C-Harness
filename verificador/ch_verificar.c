@@ -1,10 +1,14 @@
 /* ch_verificar.c: verificador de C-Harness.
  *
- * Regla CONST-1: un parámetro `T *` que la función no escribe debe ser `const T *`.
+ * Reglas:
+ *   CONST-1   un parámetro `T *` que la función no escribe debe ser `const T *`.
+ *   ALIAS-1   una variable no entra dos veces como salida `&x` en una misma llamada.
+ *   ESTADO-1  la dirección directa de un `static` no sale de su función con permiso de escritura.
+ *   NOMBRE-1  una variable local no se llama como una función del mismo archivo.
  *
- * El verificador no modela qué es escribir. Inserta `const` en el parámetro y
- * en sus redeclaraciones, reanaliza el archivo y deja que C decida: si sigue
- * compilando, el `const` era posible.
+ * En CONST-1 el verificador no modela qué es escribir. Inserta `const` en el
+ * parámetro y en sus redeclaraciones, reanaliza el archivo y deja que C decida:
+ * si sigue compilando, el `const` era posible.
  *
  * Uso: ch_verificar archivo.c [opciones de compilación]
  * Salida: 0 sin hallazgos, 1 con hallazgos, 2 si no se pudo analizar.
@@ -226,6 +230,183 @@ static int admite_const(const struct analisis *a, const struct candidato *c, CXT
   return respuesta;
 }
 
+struct revision {
+  const char *ruta;
+  CXCursor funcion;
+  int hallazgos;
+};
+
+struct busqueda_funcion {
+  const char *nombre;
+  int encontrada;
+};
+
+struct hijos {
+  CXCursor cursores[2];
+  unsigned cuantos;
+};
+
+static void reportar(struct revision *r, CXCursor lugar, const char *regla, const char *nombre, const char *problema) {
+  unsigned linea = 0;
+  clang_getFileLocation(clang_getCursorLocation(lugar), NULL, &linea, NULL, NULL);
+  printf("%s:%u: %s: '%s' %s\n", r->ruta, linea, regla, nombre, problema);
+  r->hallazgos++;
+}
+
+static enum CXChildVisitResult tomar_hijos(CXCursor cursor, CXCursor padre, CXClientData datos) {
+  (void)padre;
+  struct hijos *h = datos;
+  h->cursores[h->cuantos++] = cursor;
+  return h->cuantos == 2 ? CXChildVisit_Break : CXChildVisit_Continue;
+}
+
+static struct hijos leer_hijos(CXCursor cursor) {
+  struct hijos h = { { clang_getNullCursor(), clang_getNullCursor() }, 0 };
+  clang_visitChildren(cursor, tomar_hijos, &h);
+  return h;
+}
+
+/* Quita paréntesis y conversiones implícitas. */
+static CXCursor desenvolver(CXCursor cursor) {
+  enum CXCursorKind tipo = clang_getCursorKind(cursor);
+  while (tipo == CXCursor_UnexposedExpr || tipo == CXCursor_ParenExpr) {
+    struct hijos h = leer_hijos(cursor);
+    if (h.cuantos == 0) break;
+    cursor = h.cursores[0];
+    tipo = clang_getCursorKind(cursor);
+  }
+  return cursor;
+}
+
+/* Para `&x` devuelve la declaración de x; en otro caso, el cursor nulo. */
+static CXCursor variable_con_direccion(CXCursor expresion) {
+  CXCursor e = desenvolver(expresion);
+  if (clang_getCursorKind(e) != CXCursor_UnaryOperator) return clang_getNullCursor();
+  if (clang_getCursorUnaryOperatorKind(e) != CXUnaryOperator_AddrOf) return clang_getNullCursor();
+  struct hijos h = leer_hijos(e);
+  if (h.cuantos == 0) return clang_getNullCursor();
+  CXCursor operando = desenvolver(h.cursores[0]);
+  if (clang_getCursorKind(operando) != CXCursor_DeclRefExpr) return clang_getNullCursor();
+  CXCursor declarada = clang_getCursorReferenced(operando);
+  return clang_getCursorKind(declarada) == CXCursor_VarDecl ? declarada : clang_getNullCursor();
+}
+
+static int es_estado_escribible(CXCursor variable) {
+  if (clang_Cursor_isNull(variable)) return 0;
+  if (clang_Cursor_getStorageClass(variable) != CX_SC_Static) return 0;
+  return !clang_isConstQualifiedType(clang_getCursorType(variable));
+}
+
+/* Devuelve la variable `static` escribible cuya dirección produce la expresión. */
+static CXCursor estado_en_expresion(CXCursor expresion) {
+  CXCursor directa = variable_con_direccion(expresion);
+  if (es_estado_escribible(directa)) return directa;
+  CXCursor e = desenvolver(expresion);
+  if (clang_getCursorKind(e) == CXCursor_DeclRefExpr) {
+    CXCursor declarada = clang_getCursorReferenced(e);
+    if (clang_getCursorKind(declarada) == CXCursor_VarDecl && es_estado_escribible(declarada) &&
+        clang_getCursorType(declarada).kind == CXType_ConstantArray)
+      return declarada;
+  }
+  return clang_getNullCursor();
+}
+
+static void reportar_estado(struct revision *r, CXCursor lugar, CXCursor variable) {
+  CXString nombre = clang_getCursorSpelling(variable);
+  reportar(r, lugar, "ESTADO-1", clang_getCString(nombre), "es estado de la función o del módulo y su dirección sale con permiso de escritura");
+  clang_disposeString(nombre);
+}
+
+static void revisar_retorno(struct revision *r, CXCursor retorno) {
+  struct hijos h = leer_hijos(retorno);
+  if (h.cuantos == 0) return;
+  CXType devuelve = clang_getCursorResultType(r->funcion);
+  if (devuelve.kind == CXType_Pointer && clang_isConstQualifiedType(clang_getPointeeType(devuelve))) return;
+  CXCursor variable = estado_en_expresion(h.cursores[0]);
+  if (!clang_Cursor_isNull(variable)) reportar_estado(r, retorno, variable);
+}
+
+static void revisar_asignacion(struct revision *r, CXCursor operacion) {
+  if (clang_getCursorBinaryOperatorKind(operacion) != CXBinaryOperator_Assign) return;
+  struct hijos h = leer_hijos(operacion);
+  if (h.cuantos < 2) return;
+  /* Guardarla en una variable local no la saca de la función. */
+  if (clang_getCursorKind(desenvolver(h.cursores[0])) == CXCursor_DeclRefExpr) return;
+  CXCursor variable = estado_en_expresion(h.cursores[1]);
+  if (!clang_Cursor_isNull(variable)) reportar_estado(r, operacion, variable);
+}
+
+static int parametro_de_salida(CXType funcion, unsigned indice) {
+  if ((int)indice >= clang_getNumArgTypes(funcion)) return 0;
+  CXType tipo = clang_getArgType(funcion, indice);
+  return tipo.kind == CXType_Pointer && !clang_isConstQualifiedType(clang_getPointeeType(tipo));
+}
+
+static void revisar_llamada(struct revision *r, CXCursor llamada) {
+  CXCursor llamado = clang_getCursorReferenced(llamada);
+  if (clang_getCursorKind(llamado) != CXCursor_FunctionDecl) return;
+  CXType funcion = clang_getCursorType(llamado);
+  int total = clang_Cursor_getNumArguments(llamada);
+  for (int i = 0; i < total; i++) {
+    if (!parametro_de_salida(funcion, (unsigned)i)) continue;
+    CXCursor primera = variable_con_direccion(clang_Cursor_getArgument(llamada, (unsigned)i));
+    if (clang_Cursor_isNull(primera)) continue;
+    for (int j = i + 1; j < total; j++) {
+      if (!parametro_de_salida(funcion, (unsigned)j)) continue;
+      CXCursor segunda = variable_con_direccion(clang_Cursor_getArgument(llamada, (unsigned)j));
+      if (!clang_Cursor_isNull(segunda) && clang_equalCursors(primera, segunda)) {
+        CXString nombre = clang_getCursorSpelling(primera);
+        reportar(r, llamada, "ALIAS-1", clang_getCString(nombre), "entra dos veces como salida en la misma llamada");
+        clang_disposeString(nombre);
+      }
+    }
+  }
+}
+
+static enum CXChildVisitResult buscar_funcion(CXCursor cursor, CXCursor padre, CXClientData datos) {
+  (void)padre;
+  struct busqueda_funcion *b = datos;
+  if (clang_getCursorKind(cursor) != CXCursor_FunctionDecl) return CXChildVisit_Continue;
+  if (!clang_Location_isFromMainFile(clang_getCursorLocation(cursor))) return CXChildVisit_Continue;
+  CXString nombre = clang_getCursorSpelling(cursor);
+  b->encontrada = strcmp(clang_getCString(nombre), b->nombre) == 0;
+  clang_disposeString(nombre);
+  return b->encontrada ? CXChildVisit_Break : CXChildVisit_Continue;
+}
+
+static void revisar_nombre(struct revision *r, CXCursor declaracion) {
+  CXString nombre = clang_getCursorSpelling(declaracion);
+  struct busqueda_funcion b = { clang_getCString(nombre), 0 };
+  if (b.nombre[0] != '\0') {
+    CXCursor raiz = clang_getTranslationUnitCursor(clang_Cursor_getTranslationUnit(declaracion));
+    clang_visitChildren(raiz, buscar_funcion, &b);
+    if (b.encontrada) reportar(r, declaracion, "NOMBRE-1", b.nombre, "ya nombra una función de este archivo");
+  }
+  clang_disposeString(nombre);
+}
+
+static enum CXChildVisitResult revisar_nodo(CXCursor cursor, CXCursor padre, CXClientData datos) {
+  (void)padre;
+  struct revision *r = datos;
+  enum CXCursorKind tipo = clang_getCursorKind(cursor);
+  if (tipo == CXCursor_VarDecl || tipo == CXCursor_ParmDecl) revisar_nombre(r, cursor);
+  else if (tipo == CXCursor_CallExpr) revisar_llamada(r, cursor);
+  else if (tipo == CXCursor_ReturnStmt) revisar_retorno(r, cursor);
+  else if (tipo == CXCursor_BinaryOperator) revisar_asignacion(r, cursor);
+  return CXChildVisit_Recurse;
+}
+
+static enum CXChildVisitResult revisar_funcion(CXCursor cursor, CXCursor padre, CXClientData datos) {
+  (void)padre;
+  struct revision *r = datos;
+  if (clang_getCursorKind(cursor) != CXCursor_FunctionDecl) return CXChildVisit_Continue;
+  if (!clang_isCursorDefinition(cursor)) return CXChildVisit_Continue;
+  if (!clang_Location_isFromMainFile(clang_getCursorLocation(cursor))) return CXChildVisit_Continue;
+  r->funcion = cursor;
+  clang_visitChildren(cursor, revisar_nodo, r);
+  return CXChildVisit_Continue;
+}
+
 static int verificar(const struct analisis *a, const char *texto, size_t longitud) {
   CXTranslationUnit base = analizar(a, texto, longitud);
   if (!base) {
@@ -250,6 +431,9 @@ static int verificar(const struct analisis *a, const char *texto, size_t longitu
       }
     }
     free(lista.datos);
+    struct revision revision = { .ruta = a->ruta };
+    clang_visitChildren(clang_getTranslationUnitCursor(base), revisar_funcion, &revision);
+    if (revision.hallazgos > 0 && resultado == CH_SIN_HALLAZGOS) resultado = CH_CON_HALLAZGOS;
   }
   clang_disposeTranslationUnit(base);
   return resultado;

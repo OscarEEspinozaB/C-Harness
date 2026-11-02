@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Mide cada celda sin arnés y con arnés. Etapas del arnés:
-#   C = compilación, V = verificador, S = símbolos, E = ejecución con sanitizadores.
+#   C = compilación, V = verificador, S = símbolos, B = búsqueda acotada, E = ejecución con sanitizadores.
 set -u
 . "$(cd "$(dirname "$0")" && pwd)/arnes/etapas.sh"
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
@@ -22,7 +22,7 @@ for c in "$CH_RAIZ"/celdas/*.c; do
   premisa=$(sed -n '1s/.*premisa: \([^ ]*\).*/\1/p' "$c")
   tipo=$(sed -n '1s/.*tipo: \([^ ]*\).*/\1/p' "$c")
   esperado=$(sed -n '2s/^\/\/ motivo: //p' "$c")
-  b=$(medir_base "$c"); a=$(medir_arnes "$c"); m=$(cat "$tmp/m")
+  b=$(medir_base "$c"); medir_arnes "$c" > "$tmp/a"; a=$(cat "$tmp/a"); m=$(cat "$tmp/m")
   case "$tipo" in
     control) [ "$a" = - ] && v=cumple || v="**FALLA**" ;;
     limite)  [ "$a" = - ] && v=límite || v="**REVISAR**" ;;
@@ -32,8 +32,13 @@ for c in "$CH_RAIZ"/celdas/*.c; do
       else v="**MOTIVO**"; fi ;;
   esac
   case "$v" in cumple) cumple=$((cumple+1));; límite) limite=$((limite+1));; *) falla=$((falla+1));; esac
-  echo "| $n | $premisa | $tipo | $b | $a | $v | $m |"
+  echo "| $n | $premisa | $tipo | $b | $a | $v | ${m:0:90} |"
 done
 echo
 echo "Cumplen: $cumple. Límites declarados: $limite. Fallan: $falla."
+if [ -s "$tmp/sin_concluir" ]; then
+  echo "CBMC no concluyó en: $(paste -sd' ' "$tmp/sin_concluir")"
+else
+  echo "CBMC concluyó en todas las celdas que analizó."
+fi
 [ "$falla" -eq 0 ]

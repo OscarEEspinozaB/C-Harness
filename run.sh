@@ -16,13 +16,18 @@ measure_baseline() {
 
 echo "| Cell | Premise | Kind | Baseline | Harness | Verdict | Reason |"
 echo "|---|---|---|---|---|---|---|"
-passed=0; failed=0; limits=0
+passed=0; failed=0; limits=0; warnings=0
 for cell in "$CH_ROOT"/cells/*.c; do
   name=$(basename "$cell" .c)
   premise=$(sed -n '1s/.*premise: \([^ ]*\).*/\1/p' "$cell")
   kind=$(sed -n '1s/.*kind: \([^ ]*\).*/\1/p' "$cell")
   expected=$(sed -n '2s/^\/\/ reason: //p' "$cell")
   baseline=$(measure_baseline "$cell"); measure_harness "$cell" > "$tmp/stage"; stage=$(cat "$tmp/stage"); reason=$(cat "$tmp/reason")
+  warning=$(cat "$tmp/warning")
+  if [ -n "$warning" ]; then
+    warnings=$((warnings+1))
+    [ -z "$reason" ] && reason="warning, only above argc $CH_ARGC_MAX: $warning"
+  fi
   case "$kind" in
     control) [ "$stage" = - ] && verdict=pass || verdict="**FAIL**" ;;
     limit)   [ "$stage" = - ] && verdict=limit || verdict="**REVIEW**" ;;
@@ -35,7 +40,7 @@ for cell in "$CH_ROOT"/cells/*.c; do
   echo "| $name | $premise | $kind | $baseline | $stage | $verdict | ${reason:0:90} |"
 done
 echo
-echo "Passed: $passed. Declared limits: $limits. Failed: $failed."
+echo "Passed: $passed. Declared limits: $limits. Failed: $failed. With warnings: $warnings."
 if [ -s "$tmp/inconclusive" ]; then
   echo "CBMC did not conclude on: $(paste -sd' ' "$tmp/inconclusive")"
 else

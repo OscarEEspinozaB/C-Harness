@@ -29,18 +29,46 @@ check_symbols() {
   return 0
 }
 
+# Runs CBMC on a wrapper. Writes the failed properties to $2. Returns CBMC's exit status.
+run_cbmc() {
+  local status
+  # shellcheck disable=SC2086
+  timeout "${CH_CBMC_TIMEOUT:-120}" cbmc -I"$CH_ROOT/harness" -I"$(dirname "$CH_CBMC_TARGET")" ${CH_CBMC_INCLUDES:-} --bounds-check --pointer-check --div-by-zero-check \
+    --unwind "${CH_CBMC_UNWIND:-5}" --no-unwinding-assertions "$1" >"$tmp/b.log" 2>&1
+  status=$?
+  grep ': FAILURE$' "$tmp/b.log" | sed -E 's/^\[[^]]*\] //; s/: FAILURE$//; s/\|/\\|/g' | sort -u > "$2"
+  return $status
+}
+
 # Bounded search with CBMC. Returns 1 only if CBMC finds a failure.
-# If it does not conclude (timeout, unsupported construct), it records that in $tmp/inconclusive.
+# CBMC assumes any argc. A failure that vanishes with a realistic argc is a warning,
+# not a rejection. If CBMC does not conclude, that goes to $tmp/inconclusive.
+CH_ARGC_MAX=1048576
 bounded_search() {
   local wrapper="$tmp/bounded.c" status
+  CH_CBMC_TARGET=$1
+  : > "$tmp/warning"
   printf '#include "ch_headers.h"\n#include "%s"\n' "${CH_CBMC_ENTRY:-$1}" > "$wrapper"
-  # shellcheck disable=SC2086
-  timeout "${CH_CBMC_TIMEOUT:-120}" cbmc -I"$CH_ROOT/harness" -I"$(dirname "$1")" ${CH_CBMC_INCLUDES:-} --bounds-check --pointer-check --div-by-zero-check \
-    --unwind "${CH_CBMC_UNWIND:-5}" --no-unwinding-assertions "$wrapper" >"$tmp/b.log" 2>&1
+  run_cbmc "$wrapper" "$tmp/failures"
   status=$?
   [ $status -eq 0 ] && return 0
   if [ $status -ne 10 ]; then echo "$(basename "$1"): exit status $status" >> "$tmp/inconclusive"; return 0; fi
-  grep ': FAILURE$' "$tmp/b.log" | sed -E 's/^\[[^]]*\] //; s/: FAILURE$//; s/\|/\\|/g' | paste -sd';' > "$tmp/reason"
+  if [ -z "${CH_CBMC_ENTRY:-}" ] && grep -qE '\bmain[[:space:]]*\([[:space:]]*int' "$1"; then
+    local bounded="$tmp/bounded_argc.c"
+    { printf '#include "ch_headers.h"\n#define main ch_program\n#include "%s"\n#undef main\n' "$1"
+      printf 'int main(int argc, char **argv) {\n  __CPROVER_assume(argc >= 1 && argc <= %d);\n  return ch_program(argc, argv);\n}\n' "$CH_ARGC_MAX"
+    } > "$bounded"
+    run_cbmc "$bounded" "$tmp/failures_bounded"
+    status=$?
+    if [ $status -ne 0 ] && [ $status -ne 10 ]; then echo "$(basename "$1"): bounded argc, exit status $status" >> "$tmp/inconclusive"; fi
+    if [ $status -eq 0 ] || [ $status -eq 10 ]; then
+      comm -23 "$tmp/failures" "$tmp/failures_bounded" | sed 's/^line [0-9]* //' | paste -sd';' > "$tmp/warning"
+      [ $status -eq 0 ] && return 0
+      paste -sd';' "$tmp/failures_bounded" > "$tmp/reason"
+      return 1
+    fi
+  fi
+  paste -sd';' "$tmp/failures" > "$tmp/reason"
   return 1
 }
 
@@ -48,6 +76,7 @@ bounded_search() {
 # Extra options: CH_INCLUDES (compile), CH_LINK and CH_RUN_ARGS.
 measure_harness() {
   : > "$tmp/reason"
+  : > "$tmp/warning"
   # shellcheck disable=SC2086
   if ! gcc $CH_STATIC_FLAGS -I"$CH_ROOT/harness" -I"$(dirname "$1")" ${CH_INCLUDES:-} -include ch_poison.h -c "$1" -o "$tmp/a.o" 2>"$tmp/c.log"; then
     grep -m1 'error' "$tmp/c.log" | sed 's/^[^ ]* error: //; s/|/\\|/g' | cut -c1-90 > "$tmp/reason"; echo C; return

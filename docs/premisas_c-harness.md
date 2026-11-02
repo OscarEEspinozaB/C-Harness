@@ -71,7 +71,7 @@ Reglas de este documento:
 
 **Normativa**: Todo programa estudiado es evidencia, nunca modelo. Cada observación se registra con su veredicto, *bueno*, *malo contenido*, *malo* o *abierto*, y con la evidencia que lo apoya. Solo se convierte en regla cuando se ha cerrado con evidencia suficiente.
 
-**Medido** (2 de noviembre de 2026): dos programas estudiados, de forma parcial. Ninguna observación ha llegado aún a regla por sí sola.
+**Medido** (2 de noviembre de 2026): tres programas estudiados, de forma parcial. Ninguna observación ha llegado aún a regla por sí sola.
 
 **Sostenida por**: el [registro](#6-registro-de-lo-observado).
 
@@ -119,7 +119,7 @@ Reglas de este documento:
 
 **Normativa**: Ninguna unidad de traducción exporta variables. El archivo que define `main` no tiene estado mutable con duración estática, ni siquiera `static` local. Los valores cruzan las funciones como parámetros. C impone excepciones como `errno` o `stdout`, que se declaran como límite.
 
-**Medido** (2 de noviembre de 2026): se sostiene en las celdas, con `nm`.
+**Medido** (2 de noviembre de 2026): se sostiene en las celdas, con `objdump`, que distingue los datos `const` que contienen punteros.
 
 **Sostenida por**: `mem2_file_variable`, `mem2_static_local`, `mem3_exported_variable`.
 
@@ -149,7 +149,7 @@ Reglas de este documento:
 
 **Normativa**: `const T *` es entrada y `T *` es salida. Un parámetro `T *` que la función no escribe debe ser `const T *`. En la llamada, una salida se pasa como `&x` siempre que sea posible.
 
-**Medido** (2 de noviembre de 2026): **parcial.** La regla CONST-1 exige el `const`, también en las cabeceras del proyecto. Pasar una variable puntero no muestra `&` en la llamada y es un límite declarado. CONST-1 tampoco ve las escrituras a través de un puntero guardado en una estructura.
+**Medido** (2 de noviembre de 2026): **parcial.** La regla CONST-1 exige el `const`, también en las cabeceras del proyecto. Pasar una variable puntero no muestra `&` en la llamada y es un límite declarado. CONST-1 tampoco ve las escrituras a través de un puntero guardado en una estructura, como en `gen_bitlen` de zlib.
 
 **Sostenida por**: `mem5_output_not_written`, `mem5_prototype_not_written`, `mem5_header_prototype_not_written`. Límite: `mem5_output_via_pointer_variable`.
 
@@ -179,7 +179,7 @@ Reglas de este documento:
 
 **Normativa**: Una función que recibe un búfer recibe también su tamaño. Las cadenas terminadas en `'\0'` son una excepción que debe declararse.
 
-**Medido** (2 de noviembre de 2026): sin regla. Observado en el 71 % de los búferes de lz4 y en el 7 % de los de cJSON, con una heurística.
+**Medido** (2 de noviembre de 2026): sin regla. Observado con una heurística en el 72 % de los búferes de zlib, el 71 % de los de lz4 y el 7 % de los de cJSON.
 
 **Sostenida por**: nada todavía.
 
@@ -223,7 +223,7 @@ Reglas de este documento:
 
 **Normativa**: Las llamadas a `malloc`, `realloc` y `free` se concentran en un punto del módulo, o la gestión se delega en quien llama.
 
-**Medido** (2 de noviembre de 2026): sin regla. cJSON hace 0 llamadas directas en su código de funciones, y lz4 hace 4.
+**Medido** (2 de noviembre de 2026): sin regla. cJSON hace 0 llamadas directas en su código de funciones, y lz4, 4. En zlib, las directas están en `zutil.c` y en las funciones `gz*`, y el núcleo las delega.
 
 **Sostenida por**: nada todavía.
 
@@ -306,6 +306,8 @@ Aplican FUN-5. **Son hipótesis sin medir**, y cada una debe confirmarse o elimi
 
 GRP-4 es distinto de los demás: es una incompatibilidad conocida de las herramientas, no un juicio sobre diseño.
 
+Hay un primer indicio para GRP-1 y GRP-2, aunque no mide si mezclar es peor. Los programas estudiados no se reparten al azar: lz4 y zlib combinan puntero con tamaño y pocas comprobaciones de `NULL` (71 y 72 % de búferes con tamaño; 10 y 9 % de punteros comprobados), mientras que cJSON combina cadenas y muchas comprobaciones (7 % y 37 %).
+
 ---
 
 ## 6. Registro de lo observado
@@ -317,14 +319,15 @@ Aplican FUN-3 y FUN-4. Los proyectos son evidencia, no modelos, y un veredicto s
 | Forma y compara punteros fuera del objeto; una comprobación posterior corta el camino | lz4, líneas 2051 y 2356 | Malo contenido | Apoya LIM-1 |
 | `strcpy` protegido por una comprobación de longitud situada unas líneas antes | cJSON, línea 456 | Malo contenido | `strcpy` sigue envenenado |
 | Desactiva un aviso de `-Wcast-qual` en un punto | cJSON, línea 2055 | Malo contenido | Apoya ARN-1 |
-| Sin estado mutable en el archivo | lz4 | Bueno | Apoya EST-2 y EST-3 |
-| Búfer acompañado de su tamaño | lz4, 71 % | Bueno | Apoya INT-4 |
-| Asignación delegada mediante funciones configurables | cJSON | Bueno | Apoya VID-2 |
+| Literal guardado en un `char *` retirando `const` con una conversión | zlib, `inflate.c`, línea 529 | Malo contenido | Apoya TIP-1 y EST-1 |
+| Sin estado mutable y con tablas precalculadas constantes | lz4; zlib, 18 tablas | Bueno | Apoya EST-2 y EST-3 |
+| Búfer acompañado de su tamaño | zlib, 72 %; lz4, 71 % | Bueno | Apoya INT-4 |
+| Asignación delegada mediante funciones configurables | cJSON; núcleo de zlib | Bueno | Apoya VID-2 |
 | `goto` hacia una salida de error | cJSON, 40 de 43; lz4, 17 de 29 | Bueno | `goto` no se envenena |
 | Estado global de configuración y error | cJSON | Abierto | Permitido hoy por EST-3 |
-| 17 o 18 conversiones explícitas por cada 100 líneas | cJSON y lz4 | Abierto | No se prohíben; cada una borra garantías |
+| De 16 a 18 conversiones explícitas por cada 100 líneas | cJSON, lz4 y zlib | Abierto | No se prohíben; cada una borra garantías |
 | `__attribute__` para optimizar | lz4, 3 usos | Abierto | Está envenenado, pero podría chocar con FUN-6 |
-| Función de 424 líneas en la parte crítica | lz4 | Abierto | Sin límite de longitud hasta medir |
+| Funciones de 424 y 680 líneas en la parte crítica | lz4; zlib, `inflate` | Abierto | Sin límite de longitud hasta medir |
 
 ---
 

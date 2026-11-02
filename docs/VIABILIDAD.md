@@ -1,6 +1,6 @@
 # Viabilidad: ¿puede un arnés hacer más seguro el desarrollo en C?
 
-**Conclusión.** Sí se puede hacer más seguro, y la parte medida es prometedora. No se puede hacer seguro en sentido estricto: C permite por diseño construcciones que ningún arnés de este tipo cierra sin convertirlo en otro lenguaje. Por eso el arnés declara sus límites en lugar de esconderlos. La conclusión es provisional: se apoya en 70 celdas pequeñas y un solo programa real, el propio verificador.
+**Conclusión.** Sí se puede hacer más seguro, y la parte medida es prometedora. No se puede hacer seguro en sentido estricto: C permite por diseño construcciones que ningún arnés de este tipo cierra sin convertirlo en otro lenguaje. Por eso el arnés declara sus límites en lugar de esconderlos. La conclusión es provisional: se apoya en 75 celdas pequeñas, el propio verificador y una [auditoría incompleta de cJSON](AUDITORIA-CJSON.md).
 
 ## Qué cambió la pregunta
 
@@ -9,19 +9,20 @@ La primera versión de este documento preguntaba si C podía volverse seguro y p
 - **Fallo:** el arnés debería detenerlo y aún no lo hace. Es trabajo pendiente.
 - **Límite:** C lo permite por diseño y el arnés no lo garantiza. Se declara en una celda de tipo `limit`.
 
-Pasar una celda a límite es una decisión visible en el historial, no una forma de mejorar el resultado. Las mediciones anteriores se conservan en [results/](../results/). Las fechadas antes de `measurement-2026-11-02d.md` usan los nombres antiguos de las celdas, en español, porque son registros históricos.
+Pasar una celda a límite es una decisión visible en el historial, no una forma de mejorar el resultado. Las mediciones anteriores se conservan en [results/](../results/). Las anteriores a `measurement-2026-11-02d.md` usan los nombres antiguos de las celdas, en español, porque son registros históricos.
 
 ## Qué se midió
 
 | Resultado | Sin arnés | Con arnés |
 |---|---|---|
-| Programas incorrectos detenidos | 17 de 56 | **52 de 56** |
-| Controles válidos aceptados | 14 de 14 | **13 de 14** |
+| Programas incorrectos detenidos | 17 de 58 | **54 de 58** |
+| Controles válidos aceptados | 17 de 17 | **17 de 17** |
 | Límites declarados | | 4 |
+| Celdas con aviso | | 3, de las cuales 1 es un control válido |
 
-Los 17 de la columna «sin arnés» incluyen programas que terminaron con un código distinto de cero por azar. Cada rechazo debe coincidir con un motivo esperado escrito en la celda; si se detiene por otra razón, cuenta como fallo. Se comprobó alterando el motivo de una celda. La tabla completa está en [measurement-2026-11-02d.md](../results/measurement-2026-11-02d.md).
+Los 17 de la columna «sin arnés» incluyen programas que terminaron con un código distinto de cero por azar. Cada rechazo debe coincidir con un motivo esperado escrito en la celda; si se detiene por otra razón, cuenta como fallo. La tabla completa está en [measurement-2026-11-02e.md](../results/measurement-2026-11-02e.md).
 
-Estas cifras no se comparan directamente con las anteriores, porque el conjunto de celdas cambió. Las celdas nuevas de las reglas y los límites se escribieron junto con los mecanismos que las detienen, así que confirman el diseño, pero no estiman cuánto detectaría el arnés en código desconocido.
+**Estas cifras son una prueba de regresión, no una tasa de detección.** Las celdas se escribieron junto con los mecanismos que las detienen. La medida más reveladora es la [auditoría de cJSON](AUDITORIA-CJSON.md): no confirmó ningún error en cJSON y sí encontró cuatro defectos en el arnés que las celdas no habían detectado.
 
 ## Qué consigue el arnés
 
@@ -33,11 +34,9 @@ Estas cifras no se comparan directamente con las anteriores, porque el conjunto 
 - **Prohibir por nombre resiste bien.** `#pragma GCC poison` resistió concatenación de tokens, alias y atributos, y cada prohibición declara su razón.
 - **Muchos errores comunes caen.** Desbordamientos de enteros, división entre cero, doble liberación, fugas y uso tras `free` se detuvieron en las celdas.
 
-## Fallo pendiente: un falso positivo
+## El aviso por `argc`
 
-`ub_control_argc_plus_one` es un programa válido y el arnés lo rechaza. CBMC considera cualquier valor de `argc`, incluido el máximo, y por eso informa de que `argc + 1` puede desbordar, algo que no ocurre en un sistema real.
-
-Es una decisión de diseño abierta. Desactivar esa comprobación en CBMC elimina el falso positivo, pero los desbordamientos solo se detectarían en los caminos que se ejecuten. La otra opción es modelar `argc` en un punto de entrada con un máximo razonable. Mientras se decide, la celda sigue en rojo.
+CBMC considera cualquier valor de `argc`, incluido el máximo, y por eso informa de que `argc + 1` puede desbordar, algo que no ocurre en un sistema real. Ahora, si un fallo desaparece al limitar `argc` a 1 048 576, el programa pasa con un **aviso** en la tabla. Esta cota es una decisión, no una garantía para todo sistema. La celda `ub_argc_overflow_within_bound` comprueba que un desbordamiento posible dentro de la cota se sigue rechazando.
 
 ## Límites declarados
 
@@ -54,23 +53,24 @@ La validez temporal es el límite más serio: un puntero colgante que escribe en
 
 - **Los sanitizadores** solo ven lo que se ejecuta y sus defensas son probabilísticas.
 - **El analizador de GCC** no es exhaustivo y da falsos positivos: informó fugas en celdas con punteros `volatile`.
-- **CBMC** comprueba todos los caminos, pero hasta una profundidad acotada y sobre su propio modelo. La etapa usa 5 vueltas y `--no-unwinding-assertions`, así que un éxito no es una demostración, y puede rechazar código válido. Sus resultados dependen de ese modelo: el verificador tuvo que recibir un `argv` válido en [cbmc_entry.c](../verifier/cbmc_entry.c), y CBMC no entra en libclang.
+- **CBMC** comprueba todos los caminos, pero hasta una profundidad acotada y sobre su propio modelo. La etapa usa 5 vueltas y `--no-unwinding-assertions`, así que un éxito no es una demostración, y puede rechazar código válido. Sus resultados dependen de ese modelo: el verificador tuvo que recibir un `argv` válido en [cbmc_entry.c](../verifier/cbmc_entry.c), y CBMC no entra en libclang. **En el verificador, CBMC solo alcanza el 15,7 % del código**, porque nunca ejecuta los recorridos del árbol. En cJSON ni siquiera concluyó.
 - **El verificador** tiene cuatro reglas de alcance limitado. CONST-1 es superficial como el propio `const` de C: no ve una escritura a través de un puntero guardado en una estructura. ALIAS-1 solo mira `&x` directos en llamadas a funciones con nombre.
 
 ## Límites de esta medición
 
 - Las celdas y el arnés tienen el mismo origen. Falta una revisión adversaria independiente.
-- Solo hay un programa real. El coste de usar el arnés en código ajeno sigue sin medirse.
-- La regla CONST-1 omite por ahora los dobles punteros, los parámetros declarados como arreglo y las declaraciones en cabeceras o generadas por macros. En estos dos últimos casos avisa de que no analizó el parámetro.
-- Una cabecera fuera de la lista permitida suele rechazarse como efecto secundario del veneno, no por una decisión explícita.
+- Solo se ha auditado un programa ajeno, y parcialmente. El coste real de adoptar el arnés sigue sin medirse.
+- La regla CONST-1 omite por ahora los dobles punteros y los parámetros declarados como arreglo. Tampoco reescribe declaraciones en cabeceras del sistema o generadas por macros; en esos casos avisa de que no analizó el parámetro.
+- Una cabecera que no sea C estándar, como las de POSIX, suele rechazarse como efecto secundario del veneno, no por una decisión explícita.
 - El verificador confía en GCC, libclang y libc, y Bash sigue coordinando las etapas.
 - CBMC no analiza módulos sin `main`.
 - Frama-C, AFL++, Valgrind, Cppcheck y clang-tidy están instalados, pero aún no se han medido contra las celdas.
 
 ## Siguientes pasos
 
-1. **Decidir cómo tratar el falso positivo de `argc`.**
-2. **Portar un programa real ajeno** de unos cientos de líneas. Es la prueba decisiva y ahora la más urgente: los controles no bastan para saber cuánto código legítimo rechaza el arnés.
-3. **Extender CONST-1** a cabeceras y declaraciones de arreglo.
-4. **Prototipar la biblioteca de arenas** contra `mem8_after_quarantine`.
-5. **Medir Frama-C, AFL++ y las demás herramientas** contra las celdas.
+1. **Correr la etapa de ejecución de cJSON**, cuando el autor la autorice.
+2. **Auditar un programa menos pulido.** cJSON es un caso favorable. Hace falta uno donde el arnés pueda demostrar que encuentra errores reales.
+3. **Hacer viable CBMC en código real**, con análisis por función y modelos de lo costoso.
+4. **Introducir errores conocidos** en código real y medir cuántos detecta el arnés, para obtener una tasa de detección que signifique algo.
+5. **Prototipar la biblioteca de arenas** contra `mem8_after_quarantine`.
+6. **Medir Frama-C, AFL++ y las demás herramientas.**

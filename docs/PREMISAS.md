@@ -17,7 +17,7 @@ Del método de Zymbol se conserva lo siguiente:
 
 **Normativa**: El arnés está escrito en el subconjunto de C que él mismo impone y se verifica a sí mismo con sus propias reglas. Toda excepción que necesite debe estar declarada y debe poder medirse.
 
-**Medido** (2 de noviembre de 2026): **se sostiene en parte.** El [verificador](../verifier/ch_verify.c) está en C y pasa por todas las etapas del arnés, y una mutación demuestra que el paso no es trivial. Las etapas las sigue coordinando Bash y el verificador confía en GCC, libclang y libc.
+**Medido** (2 de noviembre de 2026): **se sostiene en parte.** El [verificador](../verifier/ch_verify.c) está en C y pasa por todas las etapas del arnés, y una mutación demuestra que el paso no es trivial. Las etapas las sigue coordinando Bash, el verificador confía en GCC, libclang y libc, y CBMC solo alcanza el 15,7 % de su código.
 
 **Sostenida por**: [self-check.sh](../self-check.sh).
 
@@ -27,7 +27,7 @@ Del método de Zymbol se conserva lo siguiente:
 
 **Normativa**: Las premisas de Zymbol fueron las bases de un lenguaje nuevo; C ya existe. C-Harness no intenta construir otro lenguaje dentro de C. Cada premisa se expresa con los diseños propios de C y declara lo que no puede garantizar por cómo está construido. Prohibir una construcción de C es una decisión que debe justificarse, no la respuesta por defecto.
 
-**Medido** (2 de noviembre de 2026): **se aplicó por primera vez.** Se retiraron el envoltorio de parámetros de salida y los venenos de `union`, `goto` y las variables de entorno. Cada prohibición restante declara su razón en [ch_poison.h](../harness/ch_poison.h). Las celdas que son límites de C se marcan como `limit`.
+**Medido** (2 de noviembre de 2026): **se aplicó por primera vez.** Se retiraron el envoltorio de parámetros de salida y los venenos de `union`, `goto` y las variables de entorno. Cada prohibición restante declara su razón en [ch_poison.h](../harness/ch_poison.h). Las celdas que son límites de C se marcan como `limit`. La auditoría de cJSON mostró que el veneno rechazaba cabeceras estándar en contra de esta premisa; ya está corregido.
 
 **Sostenida por**: revisión. Ningún programa puede demostrar que una prohibición está justificada.
 

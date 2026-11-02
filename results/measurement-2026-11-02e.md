@@ -8,6 +8,7 @@
 | agt4_system | AGT-4 | violation | - | C | pass | attempt to use poisoned "system" |
 | agt4_token_paste_declaration | AGT-4 | evasion | - | C | pass | attempt to use poisoned "system" |
 | agt4_unlisted_effect | AGT-4 | evasion | - | S | pass | symbol not allowed: unlink |
+| base1_control_standard_headers | BASE-1 | control | - | - | pass |  |
 | evasion_line_marker_header | ARN | evasion | - | C | pass | style of line directive is a GCC extension |
 | evasion_own_header | ARN | evasion | - | C | pass | attempt to use poisoned "system_header" |
 | evasion_silence_warning | ARN | evasion | - | C | pass | attempt to use poisoned "diagnostic" |
@@ -33,8 +34,11 @@
 | mem5_control_c_form | MEM-5 | control | - | - | pass |  |
 | mem5_control_distinct_outputs | MEM-5 | control | - | - | pass |  |
 | mem5_control_fixed_callback | MEM-5 | control | - | - | pass |  |
+| mem5_control_header_prototype | MEM-5 | control | - | - | pass |  |
 | mem5_control_output_and_read | MEM-5 | control | - | - | pass |  |
 | mem5_control_writes_after_passing | MEM-5 | control | - | - | pass |  |
+| mem5_control_write_through_cast | MEM-5 | control | - | - | pass |  |
+| mem5_header_prototype_not_written | MEM-5 | violation | - | V | pass | CONST-1: parameter 'value' of 'api_read' is never written: declare it 'const int *' |
 | mem5_output_not_written | MEM-5 | violation | - | V | pass | CONST-1: parameter 'p' of 'read_value' is never written: declare it 'const int *' |
 | mem5_output_via_pointer_variable | MEM-5 | limit | - | - | limit |  |
 | mem5_prototype_not_written | MEM-5 | violation | - | V | pass | CONST-1: parameter 'p' of 'read_value' is never written: declare it 'const int *' |
@@ -72,5 +76,5 @@
 | ub_returns_local | UB | violation | E | C | pass | function returns address of local variable [-Werror=return-local-addr] |
 | ub_uninitialized | UB | violation | E | C | pass | ‘x’ is used uninitialized [-Werror=uninitialized] |
 
-Passed: 67. Declared limits: 4. Failed: 0. With warnings: 3.
+Passed: 71. Declared limits: 4. Failed: 0. With warnings: 3.
 CBMC concluded on every cell it analyzed.

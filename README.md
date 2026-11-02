@@ -11,7 +11,7 @@ Dos premisas guían el proyecto:
 - **C-Harness pasa por C-Harness.** El verificador está escrito en C y debe superar sus propias reglas.
 - **El arnés vive con C tal como es.** No intenta construir otro lenguaje dentro de C.
 
-Última medición (2 de noviembre de 2026, GCC 14.2): de 56 programas incorrectos, el arnés detuvo 52 y los otros 4 son límites declarados. Aceptó 13 de 14 programas válidos: uno se rechaza por un falso positivo pendiente de decidir.
+Última medición (2 de noviembre de 2026, GCC 14.2): de 58 programas incorrectos, el arnés detuvo 54 y los otros 4 son límites declarados, y aceptó los 17 programas válidos de control. Son pruebas de regresión, no una tasa de detección. La [auditoría de cJSON](docs/AUDITORIA-CJSON.md), todavía incompleta, no confirmó errores en cJSON y encontró cuatro defectos en el propio arnés.
 
 El análisis completo está en [docs/VIABILIDAD.md](docs/VIABILIDAD.md).
 
@@ -28,7 +28,7 @@ Necesitas Debian 13 o equivalente. [install-tools.sh](install-tools.sh) instala 
 ./self-check.sh   # pasa el verificador por su propio arnés
 ```
 
-`run.sh` termina con error mientras alguna celda falle, y hoy es así.
+`run.sh` termina con error si alguna celda falla.
 
 La tabla indica en qué etapa se detuvo cada celda:
 
@@ -50,8 +50,9 @@ La tabla indica en qué etapa se detuvo cada celda:
 | [harness/](harness/) | Banderas, veneno de identificadores, lista de símbolos y etapas |
 | [verifier/](verifier/) | El verificador en C |
 | [cells/](cells/) | Programas de prueba: controles, violaciones y evasiones |
-| [results/](results/) | Mediciones fechadas |
+| [audit/](audit/) | Auditorías de programas reales |
+| [results/](results/) | Mediciones y auditorías |
 
 ## Licencia
 
-[MIT](LICENSE).
+Copyright (C) 2026 OscarEEspinozaB. Este programa es software libre bajo la [GNU Affero General Public License, versión 3](LICENSE).

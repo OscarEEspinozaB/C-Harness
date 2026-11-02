@@ -1,13 +1,35 @@
-# Premisas candidatas
+# Premisas
 
-Estas premisas proceden del proyecto paralelo [Zymbol](https://github.com/zymbol-lang), cuyo documento `PREMISES.md` declara un modelo de memoria para un lenguaje nuevo. Aquí se adaptan a C.
+Estas premisas parten del proyecto paralelo [Zymbol](https://github.com/zymbol-lang), cuyo documento `PREMISES.md` declara un modelo de memoria para un lenguaje nuevo. Aquí se adaptan a C.
 
-**Son candidatas.** Las redactó el asistente a partir de ese documento y solo pasan a ser normativas cuando el autor del proyecto las acepte. Se hereda también el método de Zymbol:
+**Son un punto de partida, no un calco.** El autor del proyecto las aceptó como base el 2 de noviembre de 2026, con la intención de eliminarlas, depurarlas o cambiarlas según lo que enseñe el trabajo. C-Harness no tiene que cumplir las premisas de Zymbol al pie de la letra: su objetivo es un arnés que permita desarrollar en C de forma más segura.
+
+Del método de Zymbol se conserva lo siguiente:
 
 - Una premisa dice lo que debe ser verdad; la medición dice lo que ocurre hoy. La distancia entre ambas es el trabajo pendiente.
-- Una premisa nunca se debilita para que coincida con la implementación.
-- Una premisa solo la cambia su autor, en un commit que no cambie nada más.
+- Una premisa no se debilita para que una implementación pase.
+- Una premisa solo la cambia su autor, a propósito, en un commit que no cambie nada más.
 - Una celda en rojo no es motivo para debilitar una premisa.
+
+## AUT-1. C-Harness es el primer programa que pasa por C-Harness
+
+**Original**: «este arnes de seguridad que permita un desarrollo mas seguro. El cual debe de reflejarse desde la construccion de este mismo C-Harness osea que el primer programa que debe paras C-Harness es el mismo.»
+
+**Normativa**: El arnés está escrito en el subconjunto de C que él mismo impone y se verifica a sí mismo con sus propias reglas. Toda excepción que necesite debe estar declarada y debe poder medirse.
+
+**Medido** (2 de noviembre de 2026): **no se sostiene.** La parte que decide, [correr.sh](../correr.sh), está escrita en Bash, y todavía no existe ningún verificador en C.
+
+**Sostenida por**: nada todavía.
+
+## BASE-1. El arnés vive con C tal como es
+
+**Original**: «estas premisas cambiaran en zymbol(La construccion de un nuevo lenguaje)era las bases del lenguaje aca debemos vivir con las limitantes y diseños del como C funciona y fue construido.»
+
+**Normativa**: Las premisas de Zymbol fueron las bases de un lenguaje nuevo; C ya existe. C-Harness no intenta construir otro lenguaje dentro de C. Cada premisa se expresa con los diseños propios de C y declara lo que no puede garantizar por cómo está construido. Prohibir una construcción de C es una decisión que debe justificarse, no la respuesta por defecto.
+
+**Medido** (2 de noviembre de 2026): **sin medir.** La tabla siguiente y las vías de cierre de [VIABILIDAD.md](VIABILIDAD.md) se escribieron antes de esta premisa y deben revisarse contra ella.
+
+**Sostenida por**: nada todavía.
 
 ## Qué premisas aplican
 

@@ -17,9 +17,9 @@ Del método de Zymbol se conserva lo siguiente:
 
 **Normativa**: El arnés está escrito en el subconjunto de C que él mismo impone y se verifica a sí mismo con sus propias reglas. Toda excepción que necesite debe estar declarada y debe poder medirse.
 
-**Medido** (2 de noviembre de 2026): **se sostiene en parte.** El [verificador](../verificador/ch_verificar.c) está en C y pasa por todas las etapas del arnés, y una mutación demuestra que el paso no es trivial. Las etapas las sigue coordinando Bash y el verificador confía en GCC, libclang y libc.
+**Medido** (2 de noviembre de 2026): **se sostiene en parte.** El [verificador](../verifier/ch_verify.c) está en C y pasa por todas las etapas del arnés, y una mutación demuestra que el paso no es trivial. Las etapas las sigue coordinando Bash y el verificador confía en GCC, libclang y libc.
 
-**Sostenida por**: [autoverificar.sh](../autoverificar.sh).
+**Sostenida por**: [self-check.sh](../self-check.sh).
 
 ## BASE-1. El arnés vive con C tal como es
 
@@ -27,7 +27,7 @@ Del método de Zymbol se conserva lo siguiente:
 
 **Normativa**: Las premisas de Zymbol fueron las bases de un lenguaje nuevo; C ya existe. C-Harness no intenta construir otro lenguaje dentro de C. Cada premisa se expresa con los diseños propios de C y declara lo que no puede garantizar por cómo está construido. Prohibir una construcción de C es una decisión que debe justificarse, no la respuesta por defecto.
 
-**Medido** (2 de noviembre de 2026): **se aplicó por primera vez.** Se retiraron el envoltorio de parámetros de salida y los venenos de `union`, `goto` y las variables de entorno. Cada prohibición restante declara su razón en [ch_veneno.h](../arnes/ch_veneno.h). Las celdas que son límites de C se marcan como `limite`.
+**Medido** (2 de noviembre de 2026): **se aplicó por primera vez.** Se retiraron el envoltorio de parámetros de salida y los venenos de `union`, `goto` y las variables de entorno. Cada prohibición restante declara su razón en [ch_poison.h](../harness/ch_poison.h). Las celdas que son límites de C se marcan como `limit`.
 
 **Sostenida por**: revisión. Ningún programa puede demostrar que una prohibición está justificada.
 
@@ -38,17 +38,17 @@ Del método de Zymbol se conserva lo siguiente:
 | MEM-1. Constantes inmutables | Aplica | Se sostiene en las celdas | `const`, `-Wcast-qual`, analizador |
 | MEM-2. Variable visible solo en su ámbito | Aplica | Se sostiene en las celdas | `nm`: ningún estado estático en el archivo de `main` |
 | MEM-3. El módulo posee su entorno | Aplica; módulo = unidad de traducción | Se sostiene en las celdas | `nm`: ninguna variable exportada |
-| MEM-4. El estado del módulo se escribe desde dentro | Aplica | **Parcial** | ESTADO-1 detiene la dirección directa; la indirecta es un límite declarado |
+| MEM-4. El estado del módulo se escribe desde dentro | Aplica | **Parcial** | STATE-1 detiene la dirección directa; la indirecta es un límite declarado |
 | MEM-5. El cruce se declara en ambos extremos | Aplica con la forma de C: `const T *` entrada, `T *` salida, `&x` en la llamada | **Parcial** | CONST-1 exige el `const` y ALIAS-1 detiene la doble salida directa; una variable puntero no muestra `&` en la llamada |
 | MEM-6. Dos niveles de entorno | Parcial; C no tiene lambdas | Se sostiene en las celdas | Ámbito de bloque; funciones anidadas prohibidas |
-| MEM-7. Un nombre, una cosa | Aplica | Se sostiene en las celdas | `-Wshadow` y NOMBRE-1, para funciones del mismo archivo |
+| MEM-7. Un nombre, una cosa | Aplica | Se sostiene en las celdas | `-Wshadow` y NAME-1, para funciones del mismo archivo |
 | MEM-8. Liberación automática o manual | Solo manual | **No se sostiene** | `malloc` y `free` son C; un puntero colgante tras reutilizarse el bloque es un límite declarado |
 | COL-1 a COL-7. Colecciones | No aplican: C no tiene colecciones | No medido | Una biblioteca podría retomarlas |
 | SYM-1 a SYM-8. Sistema de signos | No aplican: son reglas de diseño de Zymbol | No aplica | |
 | AGT-1. Importar no ejecuta nada | Aplica | Se sostiene en las celdas | Veneno de atributos |
 | AGT-2. El módulo declara su superficie | Aplica | No medido | `-Wmissing-prototypes` lo apoya |
 | AGT-3. Programa alcanzable conocido de antemano | Parcial | Parcial | Veneno de `dlopen` y `dlsym`; faltan punteros a función |
-| AGT-4. Superficie de efectos cerrada | Aplica | Se sostiene en las celdas | `nm` y una [lista cerrada de símbolos](../arnes/simbolos_permitidos.txt) |
+| AGT-4. Superficie de efectos cerrada | Aplica | Se sostiene en las celdas | `nm` y una [lista cerrada de símbolos](../harness/allowed_symbols.txt) |
 | AGT-5. El paquete es código fuente | Fuera de alcance por ahora | No medido | |
 | TYP-2. Rechazo estático de tipos | Parcial | **Parcial** | `void *` y las conversiones explícitas son C; quedan como límite declarado |
 

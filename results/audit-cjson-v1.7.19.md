@@ -2,7 +2,7 @@
 
 Commit: `c859b25da02955fef659d658b8f324b5cde87be3`. Lines of cJSON.c: 3191.
 
-## Stage C: poison, with cJSON's extra headers loaded first
+## Stage C: poison
 
 ```
       6 "sprintf"
@@ -10,15 +10,10 @@ Commit: `c859b25da02955fef659d658b8f324b5cde87be3`. Lines of cJSON.c: 3191.
       3 "diagnostic"
 ```
 
-Without preloading, system headers outside the allowed list also hit the poison:
-
-```
-```
-
 ## Stage C: warnings without poison
 
 ```
-cJSON.c:611:15: warning: comparing floating-point with ‘==’ or ‘!=’ is unsafe [-Wfloat-equal]
+      1 -Wfloat-equal
 ```
 
 ## Stage V: verifier
@@ -36,10 +31,33 @@ State: b global_error, d global_hooks, b version.1
 
 External symbols outside the list: sprintf, strcpy
 
-## Stage B: CBMC on cJSON_Parse with a short input of unknown contents
+## Stage B: CBMC on a short input of unknown contents
 
-Input of 2 characters: exit status 124 in 101 s. 
+Input of 2 characters: exit status 124 in 100 s. 
 
 Input of 4 characters: exit status 124 in 100 s. 
+
+## Practice counts (exploratory, not a harness stage)
+
+```
+functions 113
+static_functions 34
+lines 2861
+longest 128
+pointer_params 167
+const_pointer_params 86
+null_checked_params 62
+buffer_params 45
+buffer_params_with_size 3
+mutable_state 3
+const_tables 1
+casts 528
+gotos 43
+unions 0
+function_pointers 6
+bounded_calls 9
+unbounded_calls 11
+direct_alloc 0
+```
 
 ## Stage E: not run (needs --run)

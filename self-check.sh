@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# AUT-1: C-Harness goes through C-Harness. A mutation proves the pass is not trivial.
+# FUN-2: C-Harness goes through C-Harness. A mutation proves the pass is not trivial.
 set -u
 . "$(cd "$(dirname "$0")" && pwd)/harness/stages.sh"
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
@@ -16,11 +16,11 @@ CH_CBMC_ENTRY="$CH_ROOT/verifier/cbmc_entry.c"
 
 measure_harness "$source_file" > "$tmp/stage"; stage=$(cat "$tmp/stage")
 if [ -s "$tmp/inconclusive" ]; then
-  echo "AUT-1 does not hold: CBMC did not conclude: $(cat "$tmp/inconclusive")"
+  echo "FUN-2 does not hold: CBMC did not conclude: $(cat "$tmp/inconclusive")"
   exit 1
 fi
 if [ "$stage" != - ]; then
-  echo "AUT-1 does not hold: stage $stage: $(cat "$tmp/reason")"
+  echo "FUN-2 does not hold: stage $stage: $(cat "$tmp/reason")"
   exit 1
 fi
 echo "The verifier passes compile, verifier, symbols, bounded search and sanitized run."
@@ -30,7 +30,7 @@ sed 's/static void report_const(const char \*path, const struct candidate \*c)/s
 if cmp -s "$source_file" "$mutated"; then echo "the mutation no longer applies: review it" >&2; exit 2; fi
 measure_harness "$mutated" > "$tmp/stage"; stage=$(cat "$tmp/stage")
 if [ "$stage" = - ]; then
-  echo "AUT-1 does not hold: the mutation passed undetected"
+  echo "FUN-2 does not hold: the mutation passed undetected"
   exit 1
 fi
 echo "Removing a const from the verifier stops it at stage $stage: $(cat "$tmp/reason")"

@@ -1,4 +1,4 @@
-// premise: MEM-5 kind: control
+// premise: INT-1 kind: control
 #include "support/api_ok.h"
 int api_read(const int *value) { return *value; }
 void api_write(int *value) { *value = 0; }

@@ -1,4 +1,4 @@
-// premise: LIM kind: evasion
+// premise: LIM-1 kind: evasion
 // reason: outside object bounds
 struct account { char name[4]; int balance; };
 int main(int argc, char **argv) {

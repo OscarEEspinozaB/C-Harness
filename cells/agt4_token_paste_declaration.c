@@ -1,4 +1,4 @@
-// premise: AGT-4 kind: evasion
+// premise: EFE-3 kind: evasion
 // reason: poisoned "system"
 #define JOIN(a, b) a##b
 int JOIN(sys, tem)(const char *);

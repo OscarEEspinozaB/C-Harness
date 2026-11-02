@@ -1,4 +1,4 @@
-// premise: MEM-8 kind: limit
+// premise: VID-1 kind: limit
 /* Returns 3 if the block is never reused: the attempt would not count. */
 int main(void) {
   char *stale = malloc(1024);

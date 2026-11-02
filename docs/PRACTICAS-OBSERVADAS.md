@@ -1,8 +1,8 @@
-# Buenas prácticas observadas en C
+# Prácticas observadas en C
 
-Este documento parte de una idea del autor del proyecto: si un programa pulido queda cerca del arnés, sus prácticas pueden enseñar qué es escribir buen C. Así las reglas nacerían de código que sobrevivió años de uso, y no solo de lo que parece correcto en teoría.
+Este documento recoge lo observado en programas reales, tanto lo bueno como lo malo. Los programas estudiados son **evidencia, no modelos**: según [FUN-3](premisas_c-harness.md), un programa puede ser seguro solo porque años de parches, pruebas exhaustivas y mucha experiencia contienen construcciones peligrosas. El objetivo de C-Harness es no depender de esa contención.
 
-**Conclusión provisional.** La idea funciona como fuente de hipótesis y ya ha corregido decisiones del arnés. Pero «pulido» no equivale a «cerca del arnés»: dos programas muy usados coinciden en algunas prácticas, discrepan en otras e incumplen reglas estrictas de C. Con dos programas, todo lo que sigue es una **hipótesis**, no una regla.
+**Conclusión provisional.** Estudiar programas pulidos sirve como fuente de hipótesis y ya ha corregido decisiones del arnés, pero «pulido» no equivale a «buena práctica». Los dos programas coinciden en algunas prácticas, discrepan en otras y contienen formas que la norma de C no permite. Los veredictos se mantienen en el [registro de las premisas](premisas_c-harness.md#6-registro-de-lo-observado). Con dos programas, todo lo que sigue es una **hipótesis**.
 
 ## Qué se comparó
 
@@ -25,28 +25,30 @@ Se analizaron dos proyectos estables y sin modificar, de autores y propósitos d
 
 El medidor no ve el código generado por macros y su detección de tamaños se basa en nombres de parámetros. Sirve para ver órdenes de magnitud, no diferencias pequeñas.
 
-## Prácticas que comparten
+## Lo que comparten
 
 | Práctica | Evidencia | Qué implica para el arnés |
 |---|---|---|
-| Usan `goto`, previsiblemente para salidas de error | 43 y 29 usos | Confirma haber quitado el veneno de `goto` por BASE-1 |
-| Hacen muchas conversiones explícitas | 17 o 18 por cada 100 líneas | Prohibir los casts haría inviable el código real: refuerza BASE-1 |
-| Casi no llaman directamente al asignador | 0 y 4 llamadas | Candidata a regla: la memoria se gestiona en un solo lugar, o la decide quien llama |
-| Tienen poco estado global | 3 y 0 variables | Apoya MEM-2 y MEM-4 |
+| Usan `goto`, previsiblemente para salidas de error | 43 y 29 usos | Confirma haber quitado el veneno de `goto` por FUN-1 |
+| Hacen muchas conversiones explícitas | 17 o 18 por cada 100 líneas | Prohibir los casts haría inviable el código real: refuerza FUN-1 |
+| Casi no llaman directamente al asignador | 0 y 4 llamadas | Apoya la candidata VID-2 |
+| Tienen poco estado global | 3 y 0 variables | Apoya EST-2 y EST-3 |
 | Compilan con avisos estrictos | Sus archivos de construcción lo muestran | Son la base común, y explican parte de la cercanía con el arnés |
 
-## Prácticas en las que discrepan
+## En qué discrepan
+
+Algunas diferencias pueden ser grupos de prácticas que no conviene mezclar, según [FUN-5](premisas_c-harness.md).
 
 | Tema | cJSON | lz4 | Lectura |
 |---|---|---|---|
 | Búferes | Cadenas terminadas en `'\0'` | Puntero más tamaño | Parece depender del dominio. Un puntero con tamaño es más fácil de comprobar |
 | Comprobar `NULL` | A menudo, en la API | Rara vez | lz4 parece trasladar más responsabilidad a quien llama. No es una regla universal |
-| Funciones sin límite | Las usa con comprobaciones | No las usa | El veneno rechaza cJSON aunque no se haya demostrado un error. Puede ser demasiado estricto |
+| Funciones sin límite | Las usa, al menos una vez tras una comprobación | No las usa | Es un fallo contenido según FUN-3: que el veneno lo rechace es la conducta correcta, aunque no haya un error demostrado |
 | Longitud de funciones | Moderada | Una de 424 líneas | Un límite de longitud chocaría con código crítico en velocidad |
 
 ## Lo que ser pulido no garantiza
 
-lz4 forma punteros fuera de los objetos a los que pertenecen, algo que la norma de C no permite, y los compara después. Con un modelo de memoria plano funciona en la práctica y tiene años de uso, pero es comportamiento indefinido técnico. Por tanto, una práctica no es buena solo porque aparezca en un programa exitoso. El detalle está en [AUDITORIA-LZ4.md](AUDITORIA-LZ4.md).
+lz4 forma punteros fuera de los objetos a los que pertenecen, algo que la norma de C no permite, y los compara después. Funciona con memoria plana y tiene años de uso, pero su seguridad depende de esa orquestación. Es un fallo contenido, no una buena práctica. El detalle está en [AUDITORIA-LZ4.md](AUDITORIA-LZ4.md).
 
 ## Límites
 
@@ -55,11 +57,6 @@ lz4 forma punteros fuera de los objetos a los que pertenecen, algo que la norma 
 - **Causa y efecto.** Que un programa pulido use algo no demuestra que eso lo haga mejor.
 - **Sin ejecución.** Ninguno de los dos se ejecutó con sanitizadores en esta medición.
 
-## Propuestas para las premisas
+## Qué sigue
 
-Ninguna se ha aplicado: cambiar una premisa corresponde al autor.
-
-1. **Prohibir menos, exigir más contexto.** Revisar si `strcpy` y `sprintf` deben seguir envenenadas o pasar a exigir una justificación.
-2. **Nueva regla candidata:** los búferes se pasan con su tamaño. lz4 lo hace en el 71 % de los casos.
-3. **Nueva regla candidata:** la asignación de memoria se concentra en un solo lugar.
-4. **Ampliar la muestra** con zlib y otros proyectos estables antes de convertir cualquier hipótesis en regla.
+Las reglas candidatas INT-4 y VID-2 y los grupos GRP-1 a GRP-3 están en las [premisas](premisas_c-harness.md). Antes de aceptarlas hace falta ampliar la muestra, por ejemplo con zlib, y medir su coste en rendimiento según FUN-6.

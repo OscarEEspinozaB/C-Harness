@@ -1,3 +1,3 @@
-// premise: LIM kind: violation
+// premise: LIM-1 kind: violation
 // reason: buffer over-read
 int main(void) { int a[4] = {0}; return a[4]; }

@@ -1,4 +1,4 @@
-// premise: MEM-8 kind: control
+// premise: VID-1 kind: control
 struct node { struct node *next; int v; };
 int main(void) {
   struct node *head = NULL;

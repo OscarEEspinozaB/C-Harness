@@ -30,6 +30,7 @@ Los fallos parecían graves: lecturas y escrituras fuera de límites en el desco
 
 - **Comportamiento indefinido técnico.** C no permite formar un puntero fuera de su arreglo, más allá de la posición siguiente al último elemento, ni compararlo. lz4 lo hace. Funciona con memoria plana, pero depende de algo que la norma no garantiza. Esta auditoría no valora si es un riesgo práctico en alguna plataforma.
 - **No es un informe de vulnerabilidad.** Nada de lo anterior demuestra un acceso indebido real.
+- **Es un fallo contenido, en el sentido de FUN-3.** La seguridad del código depende de una comprobación posterior y de cómo se comportan los punteros en memoria plana, no de una forma que una regla pueda comprobar.
 
 ## Lo que esto cambia en el arnés
 

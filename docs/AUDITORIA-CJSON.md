@@ -25,7 +25,7 @@ Se esperaba una avalancha de errores y no ocurrió. La razón probable es que cJ
 |---|---|---|
 | CONST-1 omitía las funciones declaradas en cabeceras | Daba «0 hallazgos» sin analizar la API pública | Corregido, con celda |
 | CONST-1 ignoraba las escrituras a través de un cast | Pedía `const` en `buffer` de `cJSON_PrintPreallocated`, que sí se escribe | Corregido, con celda |
-| El veneno rechazaba `math.h`, `ctype.h` y otras cabeceras estándar | 28 errores ajenos al programa, en contra de BASE-1 | Corregido, con celda |
+| El veneno rechazaba `math.h`, `ctype.h` y otras cabeceras estándar | 28 errores ajenos al programa, en contra de FUN-1 | Corregido, con celda |
 | La lista de símbolos excluía funciones estándar inofensivas como `strtod` | Rechazos sin justificación | Corregido |
 
 ## Lo que esto cambia en la viabilidad

@@ -1,4 +1,4 @@
-// premise: TIP kind: limit
+// premise: TIP-1 kind: limit
 struct a { int x; int y; };
 struct b { double v; };
 static int read_value(void *p) { struct a *q = p; return q->y == 0 ? 0 : 0; }

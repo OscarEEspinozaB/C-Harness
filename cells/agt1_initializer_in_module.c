@@ -1,4 +1,4 @@
-// premise: AGT-1 kind: evasion
+// premise: EFE-1 kind: evasion
 // reason: poisoned "__attribute__"
 void module_nothing(void);
 static void before(void) { puts("before main"); }

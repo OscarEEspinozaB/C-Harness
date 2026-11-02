@@ -1,4 +1,4 @@
-// premise: MEM-8 kind: control
+// premise: VID-1 kind: control
 int main(void) {
   int r = 1;
   int *a = malloc(sizeof *a);

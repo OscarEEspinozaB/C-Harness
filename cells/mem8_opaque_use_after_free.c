@@ -1,4 +1,4 @@
-// premise: MEM-8 kind: evasion
+// premise: VID-1 kind: evasion
 // reason: use-after-free
 int main(void) {
   int *p = calloc(1, sizeof *p);

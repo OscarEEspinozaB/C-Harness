@@ -6,12 +6,13 @@
 
 Experimento de viabilidad. **C-Harness no hace seguro el código C**: busca hacer más seguro su desarrollo y declarar con claridad lo que no puede garantizar. No debe usarse todavía para proteger nada.
 
-Dos premisas guían el proyecto:
+Estas [premisas](docs/premisas_c-harness.md) guían el proyecto:
 
-- **C-Harness pasa por C-Harness.** El verificador está escrito en C y debe superar sus propias reglas.
 - **El arnés vive con C tal como es.** No intenta construir otro lenguaje dentro de C.
+- **C-Harness pasa por C-Harness.** El verificador está escrito en C y debe superar sus propias reglas.
+- **Las reglas contienen lo que hoy contienen la experiencia y el tiempo.** Que un programa haya sobrevivido no convierte sus prácticas en buenas.
 
-Última medición (2 de noviembre de 2026, GCC 14.2): de 58 programas incorrectos, el arnés detuvo 54 y los otros 4 son límites declarados, y aceptó los 17 programas válidos de control. Son pruebas de regresión, no una tasa de detección. Las auditorías, todavía incompletas, de [cJSON](docs/AUDITORIA-CJSON.md) y [lz4](docs/AUDITORIA-LZ4.md) no confirmaron errores de memoria y encontraron cuatro defectos en el propio arnés. También son una fuente de [buenas prácticas observadas](docs/BUENAS-PRACTICAS.md).
+Última medición (2 de noviembre de 2026, GCC 14.2): de 58 programas incorrectos, el arnés detuvo 54 y los otros 4 son límites declarados, y aceptó los 17 programas válidos de control. Son pruebas de regresión, no una tasa de detección. Las auditorías, todavía incompletas, de [cJSON](docs/AUDITORIA-CJSON.md) y [lz4](docs/AUDITORIA-LZ4.md) no confirmaron errores de memoria y encontraron cuatro defectos en el propio arnés. Esos programas son evidencia, no modelos: lo observado se recoge en [prácticas observadas](docs/PRACTICAS-OBSERVADAS.md).
 
 El análisis completo está en [docs/VIABILIDAD.md](docs/VIABILIDAD.md).
 
@@ -46,8 +47,8 @@ La tabla indica en qué etapa se detuvo cada celda:
 | Ruta | Contenido |
 |---|---|
 | [docs/VIABILIDAD.md](docs/VIABILIDAD.md) | Qué funcionó, qué no y qué sigue |
-| [docs/BUENAS-PRACTICAS.md](docs/BUENAS-PRACTICAS.md) | Prácticas observadas en programas pulidos |
-| [docs/PREMISAS.md](docs/PREMISAS.md) | Premisas del proyecto: parten de Zymbol y evolucionan con el trabajo |
+| [docs/PRACTICAS-OBSERVADAS.md](docs/PRACTICAS-OBSERVADAS.md) | Lo observado en programas reales, bueno y malo |
+| [docs/premisas_c-harness.md](docs/premisas_c-harness.md) | Premisas del proyecto, escritas desde C, y registro de lo observado |
 | [harness/](harness/) | Banderas, veneno de identificadores, lista de símbolos y etapas |
 | [verifier/](verifier/) | El verificador en C |
 | [cells/](cells/) | Programas de prueba: controles, violaciones y evasiones |

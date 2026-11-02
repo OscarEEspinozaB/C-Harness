@@ -4,7 +4,7 @@
 
 ## Qué cambió la pregunta
 
-La primera versión de este documento preguntaba si C podía volverse seguro y proponía cerrar los huecos prohibiendo punteros crudos, aritmética de punteros y `void *`. La premisa [BASE-1](PREMISAS.md) descartó ese camino, porque esas construcciones son C. Ahora se distinguen dos cosas:
+La primera versión de este documento preguntaba si C podía volverse seguro y proponía cerrar los huecos prohibiendo punteros crudos, aritmética de punteros y `void *`. La premisa [FUN-1](premisas_c-harness.md) descartó ese camino, porque esas construcciones son C. Ahora se distinguen dos cosas:
 
 - **Fallo:** el arnés debería detenerlo y aún no lo hace. Es trabajo pendiente.
 - **Límite:** C lo permite por diseño y el arnés no lo garantiza. Se declara en una celda de tipo `limit`.
@@ -20,9 +20,9 @@ Pasar una celda a límite es una decisión visible en el historial, no una forma
 | Límites declarados | | 4 |
 | Celdas con aviso | | 3, de las cuales 1 es un control válido |
 
-Los 17 de la columna «sin arnés» incluyen programas que terminaron con un código distinto de cero por azar. Cada rechazo debe coincidir con un motivo esperado escrito en la celda; si se detiene por otra razón, cuenta como fallo. La tabla completa está en [measurement-2026-11-02e.md](../results/measurement-2026-11-02e.md).
+Los 17 de la columna «sin arnés» incluyen programas que terminaron con un código distinto de cero por azar. Cada rechazo debe coincidir con un motivo esperado escrito en la celda; si se detiene por otra razón, cuenta como fallo. La tabla completa está en [measurement-2026-11-02f.md](../results/measurement-2026-11-02f.md).
 
-**Estas cifras son una prueba de regresión, no una tasa de detección.** Las celdas se escribieron junto con los mecanismos que las detienen. Las medidas más reveladoras son las auditorías: ni [cJSON](AUDITORIA-CJSON.md) ni [lz4](AUDITORIA-LZ4.md) mostraron un error de memoria confirmado, y cJSON destapó cuatro defectos del arnés que las celdas no habían detectado. Lo que aprendemos de esos programas se recoge en [BUENAS-PRACTICAS.md](BUENAS-PRACTICAS.md).
+**Estas cifras son una prueba de regresión, no una tasa de detección.** Las celdas se escribieron junto con los mecanismos que las detienen. Las medidas más reveladoras son las auditorías: ni [cJSON](AUDITORIA-CJSON.md) ni [lz4](AUDITORIA-LZ4.md) mostraron un error de memoria confirmado, y cJSON destapó cuatro defectos del arnés que las celdas no habían detectado. Esos programas son evidencia y no modelos: lo observado, bueno o malo, se recoge en [PRACTICAS-OBSERVADAS.md](PRACTICAS-OBSERVADAS.md).
 
 ## Qué consigue el arnés
 
@@ -69,8 +69,10 @@ La validez temporal es el límite más serio: un puntero colgante que escribe en
 ## Siguientes pasos
 
 1. **Correr la etapa de ejecución de cJSON y lz4**, cuando el autor la autorice.
-2. **Ampliar la muestra de programas pulidos**, como zlib, y convertir las hipótesis de [BUENAS-PRACTICAS.md](BUENAS-PRACTICAS.md) en reglas solo si se sostienen.
+2. **Ampliar la muestra de programas pulidos**, como zlib, y y cerrar las observaciones del registro de [las premisas](premisas_c-harness.md) solo con evidencia.
 3. **Mostrar las relaciones de punteros de CBMC como causa probable** de los fallos posteriores.
 4. **Introducir errores conocidos** en código real y medir cuántos detecta el arnés, para obtener una tasa de detección que signifique algo.
-5. **Prototipar la biblioteca de arenas** contra `mem8_after_quarantine`.
-6. **Medir Frama-C, AFL++ y las demás herramientas.**
+5. **Distinguir los fallos contenidos** de forma automática, según FUN-3.
+6. **Medir el coste en rendimiento**, según FUN-6, empezando por lz4 con y sin los cambios que exige el arnés.
+7. **Prototipar la biblioteca de arenas** contra `mem8_after_quarantine`.
+8. **Medir Frama-C, AFL++ y las demás herramientas.**

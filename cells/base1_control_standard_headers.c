@@ -1,4 +1,4 @@
-// premise: BASE-1 kind: control
+// premise: FUN-1 kind: control
 /* Standard C headers must not trip the poison. */
 #include <ctype.h>
 #include <float.h>

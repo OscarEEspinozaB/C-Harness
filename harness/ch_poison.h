@@ -1,6 +1,6 @@
 /* ch_poison.h: injected with -include. Loads the allowed headers first, then
  * poisons identifiers: using one is a compile error.
- * Under BASE-1, each ban states why C alone cannot uphold it. */
+ * Under FUN-1, each ban states why C alone cannot uphold it. */
 #ifndef CH_POISON_H
 #define CH_POISON_H
 
@@ -8,7 +8,7 @@
 
 /* They write without knowing the destination size: C offers bounded variants. */
 #pragma GCC poison gets strcpy strcat sprintf vsprintf
-/* They run code chosen at run time: they break AGT-3 and AGT-4. */
+/* They run code chosen at run time: they break EFE-2 and EFE-3. */
 #pragma GCC poison system popen fork execl execv execve execvp dlopen dlsym syscall
 /* It reserves stack space with no check and no error result. */
 #pragma GCC poison alloca

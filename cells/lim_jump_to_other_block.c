@@ -1,4 +1,4 @@
-// premise: LIM kind: evasion
+// premise: LIM-1 kind: evasion
 // reason: outside object bounds
 int main(void) {
   char *a = calloc(64, 1);

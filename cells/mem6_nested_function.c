@@ -1,4 +1,4 @@
-// premise: MEM-6 kind: violation
+// premise: EST-4 kind: violation
 // reason: nested functions
 int main(void) {
   int x = 0;

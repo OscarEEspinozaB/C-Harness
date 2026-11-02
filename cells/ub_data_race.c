@@ -1,4 +1,4 @@
-// premise: UB kind: evasion
+// premise: UB-1 kind: evasion
 // reason: not allowed: pthread_create
 typedef unsigned long thread_id;
 int pthread_create(thread_id *, const void *, void *(*)(void *), void *);

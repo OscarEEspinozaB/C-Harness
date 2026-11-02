@@ -1,4 +1,4 @@
-// premise: MEM-4 kind: control
+// premise: EST-3 kind: control
 const int *module_read(void);
 int module_increment(void);
 static int state = 0;

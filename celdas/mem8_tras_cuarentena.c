@@ -1,4 +1,4 @@
-// premisa: MEM-8 tipo: evasion
+// premisa: MEM-8 tipo: limite
 /* Devuelve 3 si no logra reutilizar el bloque: el intento no valdría. */
 int main(void) {
   char *viejo = malloc(1024);

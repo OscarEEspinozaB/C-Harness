@@ -1,4 +1,4 @@
-// premisa: LIM tipo: evasion
+// premisa: LIM tipo: limite
 int main(int argc, char **argv) {
   (void)argv;
   int a[8] = {0};

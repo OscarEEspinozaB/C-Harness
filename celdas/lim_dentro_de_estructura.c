@@ -1,4 +1,4 @@
-// premisa: LIM tipo: evasion
+// premisa: LIM tipo: limite
 struct cuenta { char nombre[4]; int saldo; };
 int main(int argc, char **argv) {
   (void)argv;

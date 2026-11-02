@@ -1,4 +1,5 @@
 // premisa: AGT-1 tipo: evasion
+// motivo: poisoned "__attribute__"
 void modulo_nada(void);
 static void antes(void) { puts("antes de main"); }
 void modulo_nada(void) {}

@@ -1,4 +1,5 @@
 // premisa: UB tipo: evasion
+// motivo: no permitido: pthread_create
 typedef unsigned long hilo_t;
 int pthread_create(hilo_t *, const void *, void *(*)(void *), void *);
 int pthread_join(hilo_t, void **);

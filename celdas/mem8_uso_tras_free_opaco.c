@@ -1,4 +1,5 @@
 // premisa: MEM-8 tipo: evasion
+// motivo: use-after-free
 int main(void) {
   int *p = calloc(1, sizeof *p);
   if (!p) return 1;

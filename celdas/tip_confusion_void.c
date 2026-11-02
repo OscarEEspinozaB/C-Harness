@@ -1,4 +1,4 @@
-// premisa: TIP tipo: evasion
+// premisa: TIP tipo: limite
 struct a { int x; int y; };
 struct b { double v; };
 static int lee(void *p) { struct a *q = p; return q->y == 0 ? 0 : 0; }

@@ -1,22 +1,22 @@
-/* ch_veneno.h: se inyecta con -include. Incluye antes la cabecera permitida
- * y luego envenena identificadores: usarlos es un error de compilación. */
+/* ch_veneno.h: se inyecta con -include. Incluye antes las cabeceras permitidas
+ * y luego envenena identificadores: usarlos es un error de compilación.
+ * Por BASE-1, cada prohibición declara por qué C no basta para sostenerla. */
 #ifndef CH_VENENO_H
 #define CH_VENENO_H
 
 #include "ch_cabeceras.h"
 
-/* Cadenas sin límite */
+/* Escriben sin conocer el tamaño del destino: C ofrece variantes con límite. */
 #pragma GCC poison gets strcpy strcat sprintf vsprintf
-/* Vías de efecto y de ejecución dinámica (AGT-3, AGT-4) */
+/* Ejecutan código elegido durante la ejecución: rompen AGT-3 y AGT-4. */
 #pragma GCC poison system popen fork execl execv execve execvp dlopen dlsym syscall
-#pragma GCC poison getenv setenv putenv environ
-/* Salidas del modelo del lenguaje */
-#pragma GCC poison asm __asm __asm__ union goto alloca setjmp longjmp
-/* Código que corre antes de main (AGT-1) */
-#pragma GCC poison constructor __constructor__ destructor __destructor__
-/* Atributos: secciones, alias y otros atajos */
-#pragma GCC poison __attribute__ __attribute
-/* Silenciar al propio arnés */
+/* Reservan en la pila sin comprobación y sin devolver error. */
+#pragma GCC poison alloca
+/* Saltan entre funciones sin ejecutar la limpieza de quien queda atrás. */
+#pragma GCC poison setjmp longjmp
+/* No son C estándar y escapan de todo análisis del arnés. */
+#pragma GCC poison asm __asm __asm__ __attribute__ __attribute
+/* Desactivarían el arnés desde el propio código (ARN-1). */
 #pragma GCC poison diagnostic system_header
 
 #endif

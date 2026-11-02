@@ -1,4 +1,5 @@
-// premisa: LIM tipo: limite
+// premisa: LIM tipo: evasion
+// motivo: outside object bounds
 struct cuenta { char nombre[4]; int saldo; };
 int main(int argc, char **argv) {
   (void)argv;

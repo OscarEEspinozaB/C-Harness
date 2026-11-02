@@ -1,4 +1,5 @@
-// premisa: TIP tipo: limite
+// premisa: TIP tipo: evasion
+// motivo: outside object bounds
 /* Una dirección inventada, no derivada de un objeto vivo. */
 int main(int argc, char **argv) {
   (void)argv;

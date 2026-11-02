@@ -38,10 +38,10 @@ Del método de Zymbol se conserva lo siguiente:
 | MEM-1. Constantes inmutables | Aplica | Se sostiene en las celdas | `const`, `-Wcast-qual`, analizador |
 | MEM-2. Variable visible solo en su ámbito | Aplica | Se sostiene en las celdas | `nm`: ningún estado estático en el archivo de `main` |
 | MEM-3. El módulo posee su entorno | Aplica; módulo = unidad de traducción | Se sostiene en las celdas | `nm`: ninguna variable exportada |
-| MEM-4. El estado del módulo se escribe desde dentro | Aplica | **No se sostiene** | Una función puede devolver un puntero al estado |
-| MEM-5. El cruce se declara en ambos extremos | Aplica con la forma de C: `const T *` entrada, `T *` salida, `&x` en la llamada | **Parcial** | CONST-1 exige el `const`; una variable puntero no muestra `&` en la llamada y la doble salida solo se detecta con `restrict` |
+| MEM-4. El estado del módulo se escribe desde dentro | Aplica | **Parcial** | ESTADO-1 detiene la dirección directa; la indirecta es un límite declarado |
+| MEM-5. El cruce se declara en ambos extremos | Aplica con la forma de C: `const T *` entrada, `T *` salida, `&x` en la llamada | **Parcial** | CONST-1 exige el `const` y ALIAS-1 detiene la doble salida directa; una variable puntero no muestra `&` en la llamada |
 | MEM-6. Dos niveles de entorno | Parcial; C no tiene lambdas | Se sostiene en las celdas | Ámbito de bloque; funciones anidadas prohibidas |
-| MEM-7. Un nombre, una cosa | Aplica | **Parcial** | `-Wshadow` no ve una variable local que oculta a una función |
+| MEM-7. Un nombre, una cosa | Aplica | Se sostiene en las celdas | `-Wshadow` y NOMBRE-1, para funciones del mismo archivo |
 | MEM-8. Liberación automática o manual | Solo manual | **No se sostiene** | `malloc` y `free` son C; un puntero colgante tras reutilizarse el bloque es un límite declarado |
 | COL-1 a COL-7. Colecciones | No aplican: C no tiene colecciones | No medido | Una biblioteca podría retomarlas |
 | SYM-1 a SYM-8. Sistema de signos | No aplican: son reglas de diseño de Zymbol | No aplica | |
@@ -60,7 +60,7 @@ Zymbol hereda estas garantías de su diseño. C tiene que declararlas:
 
 | Identificador | Regla propuesta | Medido hoy |
 |---|---|---|
-| LIM-1 | Ningún acceso sale del objeto al que apunta | **Parcial**: CBMC detectó las dos celdas restantes, pero aún no forma parte del arnés |
+| LIM-1 | Ningún acceso sale del objeto al que apunta | **Parcial**: sanitizadores y CBMC lo detienen en las celdas, sin garantía fuera de los caminos y límites que exploran |
 | TMP-1 | Ningún puntero se usa después de terminar la vida de su objeto | **No se sostiene** |
 | TIP-1 | Ningún dato se reinterpreta como otro tipo | **No se sostiene** |
 | UB-1 | Ningún programa aceptado tiene comportamiento indefinido | **No se sostiene** |

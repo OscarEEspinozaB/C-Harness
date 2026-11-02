@@ -1,5 +1,5 @@
 // premisa: LIM tipo: evasion
-// motivo: insufficient space
+// motivo: outside object bounds
 int main(void) {
   char *a = calloc(64, 1);
   char *b = calloc(64, 1);

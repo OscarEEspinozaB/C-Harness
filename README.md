@@ -11,7 +11,7 @@ Dos premisas guían el proyecto:
 - **C-Harness pasa por C-Harness.** El verificador está escrito en C y debe superar sus propias reglas.
 - **El arnés vive con C tal como es.** No intenta construir otro lenguaje dentro de C.
 
-Última medición (2 de noviembre de 2026, GCC 14.2): de 58 programas incorrectos, el arnés detuvo 54 y los otros 4 son límites declarados, y aceptó los 17 programas válidos de control. Son pruebas de regresión, no una tasa de detección. La [auditoría de cJSON](docs/AUDITORIA-CJSON.md), todavía incompleta, no confirmó errores en cJSON y encontró cuatro defectos en el propio arnés.
+Última medición (2 de noviembre de 2026, GCC 14.2): de 58 programas incorrectos, el arnés detuvo 54 y los otros 4 son límites declarados, y aceptó los 17 programas válidos de control. Son pruebas de regresión, no una tasa de detección. Las auditorías, todavía incompletas, de [cJSON](docs/AUDITORIA-CJSON.md) y [lz4](docs/AUDITORIA-LZ4.md) no confirmaron errores de memoria y encontraron cuatro defectos en el propio arnés. También son una fuente de [buenas prácticas observadas](docs/BUENAS-PRACTICAS.md).
 
 El análisis completo está en [docs/VIABILIDAD.md](docs/VIABILIDAD.md).
 
@@ -46,6 +46,7 @@ La tabla indica en qué etapa se detuvo cada celda:
 | Ruta | Contenido |
 |---|---|
 | [docs/VIABILIDAD.md](docs/VIABILIDAD.md) | Qué funcionó, qué no y qué sigue |
+| [docs/BUENAS-PRACTICAS.md](docs/BUENAS-PRACTICAS.md) | Prácticas observadas en programas pulidos |
 | [docs/PREMISAS.md](docs/PREMISAS.md) | Premisas del proyecto: parten de Zymbol y evolucionan con el trabajo |
 | [harness/](harness/) | Banderas, veneno de identificadores, lista de símbolos y etapas |
 | [verifier/](verifier/) | El verificador en C |

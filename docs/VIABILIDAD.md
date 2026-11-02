@@ -1,6 +1,6 @@
 # Viabilidad: ¿puede un arnés hacer más seguro el desarrollo en C?
 
-**Conclusión.** Sí se puede hacer más seguro, y la parte medida es prometedora. No se puede hacer seguro en sentido estricto: C permite por diseño construcciones que ningún arnés de este tipo cierra sin convertirlo en otro lenguaje. Por eso el arnés declara sus límites en lugar de esconderlos. La conclusión es provisional: se apoya en 75 celdas pequeñas, el propio verificador y una [auditoría incompleta de cJSON](AUDITORIA-CJSON.md).
+**Conclusión.** Sí se puede hacer más seguro, y la parte medida es prometedora. No se puede hacer seguro en sentido estricto: C permite por diseño construcciones que ningún arnés de este tipo cierra sin convertirlo en otro lenguaje. Por eso el arnés declara sus límites en lugar de esconderlos. La conclusión es provisional: se apoya en 75 celdas pequeñas, el propio verificador y auditorías incompletas de [cJSON](AUDITORIA-CJSON.md) y [lz4](AUDITORIA-LZ4.md).
 
 ## Qué cambió la pregunta
 
@@ -22,7 +22,7 @@ Pasar una celda a límite es una decisión visible en el historial, no una forma
 
 Los 17 de la columna «sin arnés» incluyen programas que terminaron con un código distinto de cero por azar. Cada rechazo debe coincidir con un motivo esperado escrito en la celda; si se detiene por otra razón, cuenta como fallo. La tabla completa está en [measurement-2026-11-02e.md](../results/measurement-2026-11-02e.md).
 
-**Estas cifras son una prueba de regresión, no una tasa de detección.** Las celdas se escribieron junto con los mecanismos que las detienen. La medida más reveladora es la [auditoría de cJSON](AUDITORIA-CJSON.md): no confirmó ningún error en cJSON y sí encontró cuatro defectos en el arnés que las celdas no habían detectado.
+**Estas cifras son una prueba de regresión, no una tasa de detección.** Las celdas se escribieron junto con los mecanismos que las detienen. Las medidas más reveladoras son las auditorías: ni [cJSON](AUDITORIA-CJSON.md) ni [lz4](AUDITORIA-LZ4.md) mostraron un error de memoria confirmado, y cJSON destapó cuatro defectos del arnés que las celdas no habían detectado. Lo que aprendemos de esos programas se recoge en [BUENAS-PRACTICAS.md](BUENAS-PRACTICAS.md).
 
 ## Qué consigue el arnés
 
@@ -53,7 +53,7 @@ La validez temporal es el límite más serio: un puntero colgante que escribe en
 
 - **Los sanitizadores** solo ven lo que se ejecuta y sus defensas son probabilísticas.
 - **El analizador de GCC** no es exhaustivo y da falsos positivos: informó fugas en celdas con punteros `volatile`.
-- **CBMC** comprueba todos los caminos, pero hasta una profundidad acotada y sobre su propio modelo. La etapa usa 5 vueltas y `--no-unwinding-assertions`, así que un éxito no es una demostración, y puede rechazar código válido. Sus resultados dependen de ese modelo: el verificador tuvo que recibir un `argv` válido en [cbmc_entry.c](../verifier/cbmc_entry.c), y CBMC no entra en libclang. **En el verificador, CBMC solo alcanza el 15,7 % del código**, porque nunca ejecuta los recorridos del árbol. En cJSON ni siquiera concluyó.
+- **CBMC** comprueba todos los caminos, pero hasta una profundidad acotada y sobre su propio modelo. La etapa usa 5 vueltas y `--no-unwinding-assertions`, así que un éxito no es una demostración, y puede rechazar código válido. Sus resultados dependen de ese modelo: el verificador tuvo que recibir un `argv` válido en [cbmc_entry.c](../verifier/cbmc_entry.c), y CBMC no entra en libclang. **En el verificador, CBMC solo alcanza el 15,7 % del código**, porque nunca ejecuta los recorridos del árbol. En cJSON no concluyó. En lz4 concluyó, pero sus lecturas fuera de límites revisadas resultaron ser efecto de cómo modela un puntero anterior al objeto.
 - **El verificador** tiene cuatro reglas de alcance limitado. CONST-1 es superficial como el propio `const` de C: no ve una escritura a través de un puntero guardado en una estructura. ALIAS-1 solo mira `&x` directos en llamadas a funciones con nombre.
 
 ## Límites de esta medición
@@ -68,9 +68,9 @@ La validez temporal es el límite más serio: un puntero colgante que escribe en
 
 ## Siguientes pasos
 
-1. **Correr la etapa de ejecución de cJSON**, cuando el autor la autorice.
-2. **Auditar un programa menos pulido.** cJSON es un caso favorable. Hace falta uno donde el arnés pueda demostrar que encuentra errores reales.
-3. **Hacer viable CBMC en código real**, con análisis por función y modelos de lo costoso.
+1. **Correr la etapa de ejecución de cJSON y lz4**, cuando el autor la autorice.
+2. **Ampliar la muestra de programas pulidos**, como zlib, y convertir las hipótesis de [BUENAS-PRACTICAS.md](BUENAS-PRACTICAS.md) en reglas solo si se sostienen.
+3. **Mostrar las relaciones de punteros de CBMC como causa probable** de los fallos posteriores.
 4. **Introducir errores conocidos** en código real y medir cuántos detecta el arnés, para obtener una tasa de detección que signifique algo.
 5. **Prototipar la biblioteca de arenas** contra `mem8_after_quarantine`.
 6. **Medir Frama-C, AFL++ y las demás herramientas.**

@@ -1,6 +1,6 @@
 # Auditoría de cJSON v1.7.19
 
-Esta auditoría pasa por el arnés un programa real que nadie adaptó a él: [cJSON](https://github.com/DaveGamble/cJSON), un analizador de JSON en C muy usado, de 3191 líneas en `cJSON.c`. Se analizó sin modificarlo, y no se incluye en este repositorio: [audit/cjson.sh](../audit/cjson.sh) descarga una versión fijada. El resultado literal está en [audit-cjson-v1.7.19.md](../results/audit-cjson-v1.7.19.md).
+Esta auditoría pasa por el arnés un programa real que nadie adaptó a él: [cJSON](https://github.com/DaveGamble/cJSON), un analizador de JSON en C muy usado, de 3191 líneas en `cJSON.c`. Se analizó sin modificarlo, y no se incluye en este repositorio: [audit/audit.sh](../audit/audit.sh) descarga una versión fijada. El resultado literal está en [audit-cjson-v1.7.19.md](../results/audit-cjson-v1.7.19.md).
 
 **Conclusión.** El arnés rechaza cJSON tal como está, pero por reglas de estilo y de política, no porque haya encontrado errores de memoria. **No se confirmó ningún defecto en cJSON.** Lo más valioso fue lo contrario de lo que se buscaba: cJSON encontró cuatro defectos en el arnés.
 
@@ -31,12 +31,12 @@ Se esperaba una avalancha de errores y no ocurrió. La razón probable es que cJ
 ## Lo que esto cambia en la viabilidad
 
 - **Las celdas no bastaban.** Estos cuatro defectos pasaron todas las celdas existentes y solo aparecieron con un programa real.
-- **CBMC no escala solo.** Funciona en celdas pequeñas, pero no con un analizador real sin más preparación. Le falta acotar el análisis por función y modelar las partes costosas.
+- **CBMC no escala solo.** Funciona en celdas pequeñas, pero no concluyó con este analizador sin más preparación. En [lz4](AUDITORIA-LZ4.md) sí concluyó, aunque sus resultados necesitaron revisión.
 - **Rechazar no significa encontrar errores.** Hasta ahora, en código real, el arnés señala política y estilo. Falta demostrar que detecta un error real que importe.
 
 ## Para repetirla
 
 ```sh
-./audit/cjson.sh         # solo análisis: no ejecuta cJSON
-./audit/cjson.sh --run   # añade la ejecución con sanitizadores
+./audit/audit.sh cjson         # solo análisis: no ejecuta cJSON
+./audit/audit.sh cjson --run   # añade la ejecución con sanitizadores
 ```

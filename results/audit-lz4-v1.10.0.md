@@ -1,11 +1,18 @@
 # lz4 v1.10.0 audit
 
-Commit: `ebb370ca83af193212df4dcbadcc5d87bc0de2f0`. Lines of lz4.c: 2829.
+Commit: `ebb370ca83af193212df4dcbadcc5d87bc0de2f0`. Files: 1. Lines: 2829.
 
 ## Stage C: poison
 
+In the project:
+
 ```
       3 "__attribute__"
+```
+
+In system headers it includes:
+
+```
 ```
 
 ## Stage C: warnings without poison
@@ -24,13 +31,13 @@ lz4.c:2816: CONST-1: parameter 'inputBuffer' of 'LZ4_create' is never written: d
 
 ## Stage S: symbols
 
-State: 
+Writable state: 
 
 External symbols outside the list: 
 
 ## Stage B: CBMC on a short input of unknown contents
 
-Input of 2 characters: exit status 10 in 8 s. ** 29 of 2652 failed (11 iterations)
+Input of 2 characters: exit status 10 in 7 s. ** 29 of 2652 failed (11 iterations)
 
 ```
 [LZ4_decompress_generic.pointer_dereference.29] line 2217 dereference failure: pointer outside object bounds in *tmp_pos

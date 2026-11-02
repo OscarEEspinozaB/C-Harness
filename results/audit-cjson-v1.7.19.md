@@ -1,13 +1,20 @@
 # cJSON v1.7.19 audit
 
-Commit: `c859b25da02955fef659d658b8f324b5cde87be3`. Lines of cJSON.c: 3191.
+Commit: `c859b25da02955fef659d658b8f324b5cde87be3`. Files: 1. Lines: 3191.
 
 ## Stage C: poison
+
+In the project:
 
 ```
       6 "sprintf"
       5 "strcpy"
       3 "diagnostic"
+```
+
+In system headers it includes:
+
+```
 ```
 
 ## Stage C: warnings without poison
@@ -27,7 +34,7 @@ cJSON.c:2125: CONST-1: parameter 'item' of 'cJSON_AddItemReferenceToObject' is n
 
 ## Stage S: symbols
 
-State: b global_error, d global_hooks, b version.1
+Writable state: global_error, global_hooks, version.1
 
 External symbols outside the list: sprintf, strcpy
 

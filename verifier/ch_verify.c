@@ -96,7 +96,8 @@ static unsigned count_errors(CXTranslationUnit unit) {
   return errors;
 }
 
-/* Errors that are not warnings raised by an option: the file itself does not compile. */
+/* Errors other than the three this verifier raises itself: the file does not compile,
+ * and a missing declaration would hide writes from CONST-1. */
 static unsigned count_hard_errors(CXTranslationUnit unit) {
   unsigned errors = 0;
   unsigned total = clang_getNumDiagnostics(unit);
@@ -104,7 +105,10 @@ static unsigned count_hard_errors(CXTranslationUnit unit) {
     CXDiagnostic diag = clang_getDiagnostic(unit, i);
     if (clang_getDiagnosticSeverity(diag) >= CXDiagnostic_Error) {
       CXString option = clang_getDiagnosticOption(diag, NULL);
-      if (string_text(option)[0] == '\0') errors++;
+      const char *name = string_text(option);
+      if (!strstr(name, "cast-qual") && !strstr(name, "incompatible-pointer-types-discards-qualifiers") &&
+          !strstr(name, "incompatible-function-pointer-types"))
+        errors++;
       clang_disposeString(option);
     }
     clang_disposeDiagnostic(diag);
@@ -397,7 +401,9 @@ static CXCursor addressed_variable(CXCursor expression) {
 static int is_writable_state(CXCursor variable) {
   if (clang_Cursor_isNull(variable)) return 0;
   if (clang_Cursor_getStorageClass(variable) != CX_SC_Static) return 0;
-  return !clang_isConstQualifiedType(clang_getCursorType(variable));
+  CXType type = clang_getCursorType(variable);
+  if (type.kind == CXType_ConstantArray) type = clang_getArrayElementType(type);
+  return !clang_isConstQualifiedType(type);
 }
 
 /* Returns the writable `static` variable whose address the expression yields. */
@@ -435,6 +441,9 @@ static void check_assignment(struct review *r, CXCursor operation) {
   if (h.count < 2) return;
   /* Storing it in a local variable does not take it out of the function. */
   if (clang_getCursorKind(unwrap(h.cursors[0])) == CXCursor_DeclRefExpr) return;
+  /* A pointer to const gives no write access. */
+  CXType target = clang_getCursorType(h.cursors[0]);
+  if (target.kind == CXType_Pointer && clang_isConstQualifiedType(clang_getPointeeType(target))) return;
   CXCursor variable = state_in_expression(h.cursors[1]);
   if (!clang_Cursor_isNull(variable)) report_state(r, operation, variable);
 }

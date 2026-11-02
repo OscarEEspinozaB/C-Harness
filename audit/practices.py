@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Counts C coding practices in one source file. Exploratory: not a harness stage."""
+"""Counts C coding practices in source files. Exploratory: not a harness stage.
+
+Usage: practices.py file.c... -- compiler options
+"""
 import sys
 from clang import cindex
 from clang.cindex import CursorKind as K, TypeKind as T
@@ -25,12 +28,8 @@ def checks_null(tokens, name):
     return False
 
 
-def main(path, args):
+def add_file(counts, path, args):
     unit = cindex.Index.create().parse(path, args=args)
-    counts = dict.fromkeys(
-        ["functions", "static_functions", "lines", "longest", "pointer_params", "const_pointer_params",
-         "null_checked_params", "buffer_params", "buffer_params_with_size", "mutable_state", "const_tables",
-         "casts", "gotos", "unions", "function_pointers", "bounded_calls", "unbounded_calls", "direct_alloc"], 0)
     for cursor in unit.cursor.walk_preorder():
         if not cursor.location.file or cursor.location.file.name != path:
             continue
@@ -73,9 +72,19 @@ def main(path, args):
             counts["bounded_calls"] += cursor.spelling in BOUNDED
             counts["unbounded_calls"] += cursor.spelling in UNBOUNDED
             counts["direct_alloc"] += cursor.spelling in ALLOC
+
+
+def main(argv):
+    split = argv.index("--") if "--" in argv else len(argv)
+    counts = dict.fromkeys(
+        ["functions", "static_functions", "lines", "longest", "pointer_params", "const_pointer_params",
+         "null_checked_params", "buffer_params", "buffer_params_with_size", "mutable_state", "const_tables",
+         "casts", "gotos", "unions", "function_pointers", "bounded_calls", "unbounded_calls", "direct_alloc"], 0)
+    for path in argv[:split]:
+        add_file(counts, path, argv[split + 1:])
     return counts
 
 
 if __name__ == "__main__":
-    for key, value in main(sys.argv[1], sys.argv[2:]).items():
+    for key, value in main(sys.argv[1:]).items():
         print(f"{key} {value}")

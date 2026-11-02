@@ -12,15 +12,22 @@ build_verifier() {
     -L"$CH_LLVM/lib" -lclang-19 -Wl,-rpath,"$CH_LLVM/lib"
 }
 
+# Prints "<l|g> <name>" for each object in writable data. objdump tells apart
+# .data.rel.ro: const data that holds pointers, which nm reports like mutable data.
+writable_objects() {
+  objdump -t "$1" | awk '$3 == "O" && ($4 ~ /^\.(data|bss|tdata|tbss)/ || $4 == "*COM*") && $4 !~ /^\.data\.rel\.ro/ {print $2, $NF}'
+}
+
 # Returns 1 and writes the reason to $tmp/reason if the object breaks a symbol rule.
 check_symbols() {
-  local table external
+  local table external objects
   table=$(nm "$1")
-  if grep -qE ' [DBCG] ' <<<"$table"; then
-    grep -m1 -E ' [DBCG] ' <<<"$table" | cut -d' ' -f2- | sed 's/^/exported variable: /' > "$tmp/reason"; return 1
+  objects=$(writable_objects "$1")
+  if grep -q '^g ' <<<"$objects"; then
+    grep -m1 '^g ' <<<"$objects" | cut -d' ' -f2 | sed 's/^/exported variable: /' > "$tmp/reason"; return 1
   fi
-  if grep -qE ' T main$' <<<"$table" && grep -qE ' [dbs] ' <<<"$table"; then
-    grep -m1 -E ' [dbs] ' <<<"$table" | cut -d' ' -f2- | sed 's/^/state in the main file: /' > "$tmp/reason"; return 1
+  if grep -qE ' T main$' <<<"$table" && [ -n "$objects" ]; then
+    head -1 <<<"$objects" | cut -d' ' -f2 | sed 's/^/state in the main file: /' > "$tmp/reason"; return 1
   fi
   external=$(awk '$1 == "U" {print $2}' <<<"$table" | grep -vxFf "$CH_ROOT/harness/allowed_symbols.txt" | grep -vE "${CH_EXTRA_SYMBOLS:-^$}" | head -1)
   if [ -n "$external" ]; then

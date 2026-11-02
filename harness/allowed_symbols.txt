@@ -25,6 +25,7 @@ ftell
 fwrite
 localeconv
 malloc
+memchr
 memcmp
 memcpy
 memmove
@@ -41,6 +42,7 @@ stdin
 stdout
 strchr
 strcmp
+strerror
 strlen
 strncmp
 strrchr
@@ -50,3 +52,4 @@ strtol
 strtoul
 tolower
 toupper
+vsnprintf

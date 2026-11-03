@@ -47,6 +47,7 @@ La tabla indica en qué etapa se detuvo cada celda:
 | Ruta | Contenido |
 |---|---|
 | [docs/VIABILIDAD.md](docs/VIABILIDAD.md) | Qué funcionó, qué no y qué sigue |
+| [docs/VIABILIDAD-LLVM-ZYMBOL.md](docs/VIABILIDAD-LLVM-ZYMBOL.md) | Viabilidad de un compilador de Zymbol en C sobre LLVM |
 | [docs/PRACTICAS-OBSERVADAS.md](docs/PRACTICAS-OBSERVADAS.md) | Lo observado en programas reales, bueno y malo |
 | [docs/premisas_c-harness.md](docs/premisas_c-harness.md) | Premisas del proyecto, escritas desde C, y registro de lo observado |
 | [harness/](harness/) | Banderas, veneno de identificadores, lista de símbolos y etapas |

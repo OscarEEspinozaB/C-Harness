@@ -24,6 +24,8 @@ Los 18 de la columna «sin arnés» incluyen programas que terminaron con un có
 
 **Estas cifras son una prueba de regresión, no una tasa de detección.** Las celdas se escribieron junto con los mecanismos que las detienen. Las medidas más reveladoras son las auditorías: ni [cJSON](AUDITORIA-CJSON.md), ni [lz4](AUDITORIA-LZ4.md), ni [zlib](AUDITORIA-ZLIB.md) mostraron un error de memoria confirmado, y cJSON y zlib destaparon siete defectos del arnés que las celdas no habían detectado. Esos programas son evidencia y no modelos: lo observado, bueno o malo, se recoge en [PRACTICAS-OBSERVADAS.md](PRACTICAS-OBSERVADAS.md).
 
+La etapa de ejecución ya se corrió en los tres: 35 entradas en cJSON, 16 en lz4 y 13 en zlib, y ningún sanitizador los detuvo. **Es una señal débil.** Son pocas entradas, y en lz4 y zlib el descompresor solo recibe datos válidos. El arnés todavía no ha detectado un error real en código real.
+
 ## Qué consigue el arnés
 
 - **El verificador se pasa a sí mismo.** [ch_verify.c](../verifier/ch_verify.c) está escrito en C y supera las cinco etapas. Si se le quita un `const`, [self-check.sh](../self-check.sh) lo detiene.
@@ -59,7 +61,7 @@ La validez temporal es el límite más serio: un puntero colgante que escribe en
 ## Límites de esta medición
 
 - Las celdas y el arnés tienen el mismo origen. Falta una revisión adversaria independiente.
-- Solo se ha auditado un programa ajeno, y parcialmente. El coste real de adoptar el arnés sigue sin medirse.
+- Se han auditado tres programas ajenos, todos de forma parcial, y dos son compresores. El coste real de adoptar el arnés sigue sin medirse.
 - La regla CONST-1 omite por ahora los dobles punteros y los parámetros declarados como arreglo. Tampoco reescribe declaraciones en cabeceras del sistema o generadas por macros; en esos casos avisa de que no analizó el parámetro.
 - Una cabecera que no sea C estándar, como las de POSIX, suele rechazarse como efecto secundario del veneno, no por una decisión explícita.
 - El verificador confía en GCC, libclang y libc, y Bash sigue coordinando las etapas.
@@ -68,11 +70,12 @@ La validez temporal es el límite más serio: un puntero colgante que escribe en
 
 ## Siguientes pasos
 
-1. **Correr la etapa de ejecución de cJSON, lz4 y zlib**, cuando el autor la autorice.
-2. **Ampliar la muestra de programas pulidos**, como zlib, y y cerrar las observaciones del registro de [las premisas](premisas_c-harness.md) solo con evidencia.
+1. **Dar datos corruptos a los descompresores de lz4 y zlib**, de forma reproducible, porque hasta ahora solo recibieron datos válidos.
+2. **Ampliar la muestra con programas que no sean compresores**, y cerrar las observaciones del registro de [las premisas](premisas_c-harness.md) solo con evidencia.
 3. **Mostrar las relaciones de punteros de CBMC como causa probable** de los fallos posteriores.
 4. **Introducir errores conocidos** en código real y medir cuántos detecta el arnés, para obtener una tasa de detección que signifique algo.
 5. **Distinguir los fallos contenidos** de forma automática, según FUN-3.
 6. **Medir el coste en rendimiento**, según FUN-6, empezando por lz4 con y sin los cambios que exige el arnés.
 7. **Prototipar la biblioteca de arenas** contra `mem8_after_quarantine`.
 8. **Medir Frama-C, AFL++ y las demás herramientas.**
+9. **Medir proyectos de varios archivos.** Es el primer requisito para usar el arnés en un programa propio, como el compilador de [VIABILIDAD-LLVM-ZYMBOL.md](VIABILIDAD-LLVM-ZYMBOL.md).

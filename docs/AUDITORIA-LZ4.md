@@ -1,10 +1,10 @@
 # Auditoría de lz4 v1.10.0
 
-Esta auditoría pasa por el arnés [lz4](https://github.com/lz4/lz4), un compresor en C muy usado, centrado en la velocidad. Se analizó `lib/lz4.c`, de 2829 líneas, sin modificarlo; no se incluye en este repositorio. El resultado literal está en [audit-lz4-v1.10.0.md](../results/audit-lz4-v1.10.0.md).
+Esta auditoría pasa por el arnés [lz4](https://github.com/lz4/lz4), un compresor en C muy usado, centrado en la velocidad. Se analizó `lib/lz4.c`, de 2829 líneas, sin modificarlo; no se incluye en este repositorio. El resultado literal está en [audit-lz4-v1.10.0.md](../results/audit-lz4-v1.10.0.md) y, con la ejecución, en [audit-lz4-v1.10.0-run.md](../results/audit-lz4-v1.10.0-run.md).
 
 **Conclusión.** **No se confirmó ningún desbordamiento en lz4.** CBMC informó de 29 fallos con entradas pequeñas, pero las lecturas fuera de límites revisadas vienen de cómo su modelo representa un puntero anterior al objeto. Lo que sí queda es comportamiento indefinido técnico: lz4 forma y compara punteros fuera de los objetos.
 
-**Alcance.** Es incompleta: no se ejecutó con sanitizadores. No se revisaron uno por uno todos los fallos de CBMC, solo los caminos descritos aquí.
+**Alcance.** Es incompleta: la ejecución con sanitizadores nunca le dio al descompresor datos corruptos. No se revisaron uno por uno todos los fallos de CBMC, solo los caminos descritos aquí.
 
 ## Qué encontró cada etapa
 
@@ -15,7 +15,7 @@ Esta auditoría pasa por el arnés [lz4](https://github.com/lz4/lz4), un compres
 | Verificador | 2 de CONST-1 | Parámetros de dos funciones que parecen conservarse por compatibilidad; sin revisar a fondo |
 | Símbolos | Sin hallazgos | Sin estado mutable y sin funciones externas fuera de la lista |
 | CBMC | 29 fallos con 2 o 4 caracteres; 15 con 19 | Ver la sección siguiente |
-| Ejecución | **No se corrió** | Falta la autorización para ejecutar código descargado |
+| Ejecución | 16 entradas, ninguna detenida | Comprime y descomprime archivos de `lib/`, y todos los resultados coinciden con el original. **El descompresor solo recibe datos válidos**, así que esto no prueba su parte más expuesta |
 
 ## El análisis de los fallos de CBMC
 

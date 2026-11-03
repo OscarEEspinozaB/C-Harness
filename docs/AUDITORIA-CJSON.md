@@ -1,10 +1,10 @@
 # Auditoría de cJSON v1.7.19
 
-Esta auditoría pasa por el arnés un programa real que nadie adaptó a él: [cJSON](https://github.com/DaveGamble/cJSON), un analizador de JSON en C muy usado, de 3191 líneas en `cJSON.c`. Se analizó sin modificarlo, y no se incluye en este repositorio: [audit/audit.sh](../audit/audit.sh) descarga una versión fijada. El resultado literal está en [audit-cjson-v1.7.19.md](../results/audit-cjson-v1.7.19.md).
+Esta auditoría pasa por el arnés un programa real que nadie adaptó a él: [cJSON](https://github.com/DaveGamble/cJSON), un analizador de JSON en C muy usado, de 3191 líneas en `cJSON.c`. Se analizó sin modificarlo, y no se incluye en este repositorio: [audit/audit.sh](../audit/audit.sh) descarga una versión fijada. El resultado literal está en [audit-cjson-v1.7.19.md](../results/audit-cjson-v1.7.19.md) y, con la ejecución, en [audit-cjson-v1.7.19-run.md](../results/audit-cjson-v1.7.19-run.md).
 
 **Conclusión.** El arnés rechaza cJSON tal como está, pero por reglas de estilo y de política, no porque haya encontrado errores de memoria. **No se confirmó ningún defecto en cJSON.** Lo más valioso fue lo contrario de lo que se buscaba: cJSON encontró cuatro defectos en el arnés.
 
-**Alcance.** Es una auditoría incompleta. La etapa de ejecución con sanitizadores no se ha corrido, y CBMC no llegó a ninguna conclusión. Por tanto, esto no dice que cJSON sea seguro.
+**Alcance.** Es una auditoría incompleta. La ejecución con sanitizadores solo cubrió 35 entradas, y CBMC no llegó a ninguna conclusión. Por tanto, esto no dice que cJSON sea seguro.
 
 ## Qué encontró cada etapa
 
@@ -15,7 +15,7 @@ Esta auditoría pasa por el arnés un programa real que nadie adaptó a él: [cJ
 | Verificador | 4 de CONST-1 | Parámetros públicos que podrían ser `const`. Cambiarlos es razonable, pero altera la API de una biblioteca publicada |
 | Símbolos | `sprintf` y `strcpy`; 3 variables de estado | El estado de un módulo está permitido, y por eso no detiene. Los símbolos coinciden con el veneno |
 | CBMC | **No concluyó** | Agotó su tiempo límite de 100 s incluso con una entrada de 2 caracteres |
-| Ejecución | **No se corrió** | Requiere ejecutar código descargado, y falta la autorización del autor del proyecto |
+| Ejecución | 35 entradas, ninguna detenida | Son archivos de sus pruebas y de su fuzzing, que el programa analiza e imprime. Solo cubre los caminos que esas entradas recorren |
 
 Se esperaba una avalancha de errores y no ocurrió. La razón probable es que cJSON es un caso favorable: lleva años en uso y se compila con banderas estrictas. Con un programa menos cuidado el resultado podría ser muy distinto, así que una sola auditoría no permite generalizar.
 

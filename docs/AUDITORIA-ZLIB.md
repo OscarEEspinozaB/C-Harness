@@ -1,10 +1,10 @@
 # Auditoría de zlib v1.3.2
 
-Esta auditoría pasa por el arnés [zlib](https://github.com/madler/zlib), una biblioteca de compresión en C con décadas de uso. Se analizaron sus 15 archivos `.c`, 9703 líneas, sin modificarlos; no se incluye en este repositorio. El resultado literal está en [audit-zlib-v1.3.2.md](../results/audit-zlib-v1.3.2.md).
+Esta auditoría pasa por el arnés [zlib](https://github.com/madler/zlib), una biblioteca de compresión en C con décadas de uso. Se analizaron sus 15 archivos `.c`, 9703 líneas, sin modificarlos; no se incluye en este repositorio. El resultado literal está en [audit-zlib-v1.3.2.md](../results/audit-zlib-v1.3.2.md) y, con la ejecución, en [audit-zlib-v1.3.2-run.md](../results/audit-zlib-v1.3.2-run.md).
 
 **Conclusión.** **No se confirmó ningún defecto de memoria en zlib.** Lo más útil fue doble: tres defectos del arnés que parecían hallazgos de zlib, y un patrón que coincide con lz4 y refuerza la hipótesis de los grupos.
 
-**Alcance.** Es incompleta: no se ejecutó con sanitizadores, CBMC no concluyó y no se revisaron uno por uno los avisos.
+**Alcance.** Es incompleta: la ejecución con sanitizadores nunca le dio al descompresor datos corruptos, CBMC no concluyó y no se revisaron uno por uno los avisos.
 
 ## Qué encontró cada etapa
 
@@ -15,7 +15,7 @@ Esta auditoría pasa por el arnés [zlib](https://github.com/madler/zlib), una b
 | Verificador | 6 de CONST-1 | Ver la nota siguiente |
 | Símbolos | Sin estado escribible; `open`, `read`, `write`, `close`, `lseek` y `fcntl` fuera de la lista | Solo en las funciones `gz*`, que hacen E/S de archivos |
 | CBMC | **No concluyó** | Agotó los 100 s con 2 y con 7 bytes de entrada |
-| Ejecución | **No se corrió** | Falta la autorización para ejecutar código descargado |
+| Ejecución | 13 entradas, ninguna detenida | Comprime y descomprime archivos de `examples/`, y todos los resultados coinciden con el original. **El descompresor solo recibe datos válidos**, y las funciones `gz*` no se ejecutan |
 
 **Nota sobre CONST-1.** El hallazgo `desc` de `gen_bitlen` cumple la letra de la regla, pero la función sí modifica datos: extrae `desc->dyn_tree` y escribe a través de ese puntero. El `const` de C es superficial. Añadirlo sería correcto para el compilador y engañoso para quien lee. Es un límite de la regla, no un error de zlib.
 

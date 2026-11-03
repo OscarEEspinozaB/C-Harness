@@ -55,7 +55,7 @@ lz4 forma punteros fuera de los objetos a los que pertenecen, algo que la norma 
 - **Tres programas no bastan.** Hace falta una muestra mayor, y sobre todo incluir proyectos de otros tipos: dos de los tres son compresores.
 - **Sesgo de supervivencia.** Solo se miran programas que triunfaron. Sin comparar con programas que fallaron, no se sabe qué prácticas causan la calidad.
 - **Causa y efecto.** Que un programa pulido use algo no demuestra que eso lo haga mejor.
-- **Sin ejecución.** Ninguno de los tres se ejecutó con sanitizadores en esta medición.
+- **Ejecución limitada.** Los tres se ejecutaron con sanitizadores sobre pocas entradas, y ninguno se detuvo. lz4 y zlib solo descomprimieron datos válidos.
 
 ## Qué sigue
 
